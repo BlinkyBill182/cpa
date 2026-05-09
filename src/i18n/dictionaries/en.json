@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "CPA Platform"
+  },
+  "nav": {
+    "home": "Home",
+    "login": "Login",
+    "ownerTenants": "Owner tenants",
+    "office": "Office"
+  },
+  "home": {
+    "title": "CPA SaaS foundation is ready",
+    "description": "Multi-tenant architecture, owner backoffice, and authentication are now initialized.",
+    "ownerAction": "Go to owner backoffice",
+    "officeAction": "Go to office portal"
+  },
+  "login": {
+    "title": "Sign in",
+    "description": "Use your account to access the platform.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Continue",
+    "error": "Authentication failed. Please verify your credentials."
+  },
+  "ownerTenants": {
+    "title": "Tenant management",
+    "description": "Create and manage CPA office tenants.",
+    "name": "Tenant name",
+    "slug": "Tenant slug",
+    "submit": "Create tenant",
+    "empty": "No tenants were created yet.",
+    "manageMembers": "Manage members"
+  },
+  "ownerMembers": {
+    "title": "Owner member assignment",
+    "tenantLabel": "Tenant",
+    "userId": "User ID",
+    "role": "Role",
+    "submit": "Assign member",
+    "empty": "No members assigned yet.",
+    "error": "Member assignment failed. Please verify input."
+  },
+  "office": {
+    "title": "Office backoffice",
+    "description": "Choose active tenant and continue to team management.",
+    "selectTenant": "Active tenant",
+    "selectTenantPlaceholder": "Select a tenant",
+    "continue": "Continue",
+    "error": "You must select a valid tenant."
+  }
+}
