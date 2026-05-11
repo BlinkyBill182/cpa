@@ -1,3 +1,5 @@
+import "server-only";
+
 import { cookies } from "next/headers";
 
 import { ACTIVE_TENANT_COOKIE } from "@/lib/auth/constants";

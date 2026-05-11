@@ -49,6 +49,12 @@
     "role": "Role",
     "submit": "Assign member",
     "empty": "No members yet.",
-    "error": "Action failed. Please verify the input."
+    "error": "Action failed. Please verify the input.",
+    "membersHeading": "Members",
+    "inviteButton": "Invite member",
+    "updateRoleButton": "Update role",
+    "removeButton": "Remove",
+    "invitationsHeading": "Invitations",
+    "emptyInvitations": "No pending invitations."
   }
 }

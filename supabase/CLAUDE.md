@@ -13,7 +13,7 @@
 ## RLS helper functions (already defined)
 
 ```sql
-is_platform_owner()           -- true if profiles.is_platform_owner = true for auth.uid()
+is_platform_owner(uid uuid)   -- true if profiles.is_platform_owner = true for the given uid; call as is_platform_owner(auth.uid())
 has_tenant_access(tid uuid)   -- true if user has a row in tenant_memberships for tid
 is_tenant_admin(tid uuid)     -- true if user has role = 'tenant_admin' for tid
 ```

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { TopNav } from "@/components/layout/top-nav";
 import { hasLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -20,9 +21,22 @@ export default async function LocaleLayout({
 
   const dict = await getDictionary(lang);
 
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let isOwner = false;
+  if (user) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("is_platform_owner")
+      .eq("id", user.id)
+      .single();
+    isOwner = data?.is_platform_owner ?? false;
+  }
+
   return (
     <>
-      <TopNav locale={lang} labels={dict.nav} />
+      <TopNav locale={lang} isOwner={isOwner} labels={dict.nav} />
       <main className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-10">{children}</main>
     </>
   );

@@ -144,7 +144,7 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 
 ### Helper DB Functions
 
-- `is_platform_owner()` — returns `true` if the calling user has `profiles.is_platform_owner = true`
+- `is_platform_owner(uid uuid)` — returns `true` if the given user has `profiles.is_platform_owner = true`; called as `is_platform_owner(auth.uid())` in RLS policies
 - `has_tenant_access(tid uuid)` — returns `true` if the calling user has a row in `tenant_memberships` for `tid`
 - `is_tenant_admin(tid uuid)` — returns `true` if the calling user has `role = 'tenant_admin'` for `tid`
 

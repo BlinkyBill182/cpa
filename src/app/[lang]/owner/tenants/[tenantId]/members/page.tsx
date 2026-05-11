@@ -80,7 +80,7 @@ export default async function OwnerTenantMembersPage({
       </form>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold">Members</h2>
+        <h2 className="text-xl font-semibold">{dict.ownerMembers.membersHeading}</h2>
         {(memberships ?? []).length === 0 ? (
           <p className="text-zinc-700">{dict.ownerMembers.empty}</p>
         ) : null}

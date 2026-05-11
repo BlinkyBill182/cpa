@@ -1,3 +1,5 @@
+import "server-only";
+
 import { redirect } from "next/navigation";
 
 import type { TenantRole } from "@/lib/auth/constants";

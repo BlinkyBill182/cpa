@@ -62,13 +62,13 @@ export default async function OfficeTeamPage({ params, searchParams }: OfficeTea
         </label>
         <div className="md:col-span-3">
           <button type="submit" className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-zinc-50">
-            Invite member
+            {dict.ownerMembers.inviteButton}
           </button>
         </div>
       </form>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold">Current members</h2>
+        <h2 className="text-xl font-semibold">{dict.ownerMembers.membersHeading}</h2>
         {(memberships ?? []).length === 0 ? (
           <p className="text-zinc-700">{dict.ownerMembers.empty}</p>
         ) : null}
@@ -92,14 +92,14 @@ export default async function OfficeTeamPage({ params, searchParams }: OfficeTea
                   </select>
                 </label>
                 <button type="submit" className="rounded-md border border-zinc-300 px-3 py-1 text-sm">
-                  Update role
+                  {dict.ownerMembers.updateRoleButton}
                 </button>
               </form>
               {membership.user_id !== user.id ? (
                 <form action={removeMemberAction.bind(null, lang)}>
                   <input type="hidden" name="userId" value={membership.user_id} />
                   <button type="submit" className="rounded-md border border-red-300 px-3 py-1 text-sm text-red-700">
-                    Remove
+                    {dict.ownerMembers.removeButton}
                   </button>
                 </form>
               ) : null}
@@ -109,9 +109,9 @@ export default async function OfficeTeamPage({ params, searchParams }: OfficeTea
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold">Invitations</h2>
+        <h2 className="text-xl font-semibold">{dict.ownerMembers.invitationsHeading}</h2>
         {(invitations ?? []).length === 0 ? (
-          <p className="text-zinc-700">No pending invitations.</p>
+          <p className="text-zinc-700">{dict.ownerMembers.emptyInvitations}</p>
         ) : null}
         {(invitations ?? []).map((invitation) => (
           <article key={invitation.id} className="rounded-md border border-zinc-200 px-4 py-3">

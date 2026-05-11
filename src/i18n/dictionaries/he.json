@@ -49,6 +49,12 @@
     "role": "תפקיד",
     "submit": "שיוך חבר",
     "empty": "אין חברים עדיין.",
-    "error": "הפעולה נכשלה. אנא בדקו את הקלט."
+    "error": "הפעולה נכשלה. אנא בדקו את הקלט.",
+    "membersHeading": "חברים",
+    "inviteButton": "הזמן חבר",
+    "updateRoleButton": "עדכן תפקיד",
+    "removeButton": "הסר",
+    "invitationsHeading": "הזמנות",
+    "emptyInvitations": "אין הזמנות ממתינות."
   }
 }

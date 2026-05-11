@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { logAuditEvent } from "@/lib/auth/audit";
 import { requirePlatformOwner } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -39,6 +40,12 @@ export const createTenantAction = async (locale: string, formData: FormData) => 
   if (error) {
     redirect(`/${locale}/owner/tenants?error=insert`);
   }
+
+  await logAuditEvent({
+    action: "tenant.created",
+    actorUserId: user.id,
+    payload: { name: parsed.data.name, slug: parsed.data.slug },
+  });
 
   revalidatePath(`/${locale}/owner/tenants`);
 };
