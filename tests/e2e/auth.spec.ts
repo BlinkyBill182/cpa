@@ -33,8 +33,7 @@ test.describe("Login page", () => {
 
   test("shows confirmation after magic link request", async ({ page }) => {
     await page.goto("/en/login");
-    const magicLinkEmail = page.getByRole("form").last().getByLabel(/email/i);
-    await magicLinkEmail.fill("any@example.com");
+    await page.locator("form").last().getByLabel(/email/i).fill("any@example.com");
     await page.getByRole("button", { name: /send magic link/i }).click();
     await expect(page).toHaveURL(/otp=sent/);
     await expect(page.getByText(/check your email/i)).toBeVisible();

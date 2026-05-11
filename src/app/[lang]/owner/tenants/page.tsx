@@ -65,9 +65,17 @@ export default async function OwnerTenantsPage({ params, searchParams }: OwnerTe
       <section className="flex flex-col gap-3">
         {(tenants ?? []).length === 0 ? <p className="text-zinc-700">{dict.ownerTenants.empty}</p> : null}
         {(tenants ?? []).map((tenant) => (
-          <article key={tenant.id} className="rounded-md border border-zinc-200 px-4 py-3">
-            <h2 className="font-medium">{tenant.name}</h2>
-            <p className="text-sm text-zinc-600">{tenant.slug}</p>
+          <article key={tenant.id} className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3">
+            <div>
+              <h2 className="font-medium">{tenant.name}</h2>
+              <p className="text-sm text-zinc-600">{tenant.slug}</p>
+            </div>
+            <a
+              href={`/${lang}/owner/tenants/${tenant.id}/members`}
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            >
+              {dict.ownerTenants.manageMembers}
+            </a>
           </article>
         ))}
       </section>

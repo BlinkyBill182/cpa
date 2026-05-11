@@ -31,7 +31,8 @@
     "name": "Tenant name",
     "slug": "Tenant slug",
     "submit": "Create tenant",
-    "empty": "No tenants were created yet."
+    "empty": "No tenants were created yet.",
+    "manageMembers": "Manage members"
   },
   "office": {
     "title": "Office backoffice",
