@@ -87,7 +87,7 @@ describe("syncPendingInvitations", () => {
     const admin = getTestAdmin();
     const { data: inviteeAuth } = await admin.auth.admin.getUserById(inviteeUserId);
 
-    const count = await syncPendingInvitations(inviteeAuth.user!);
+    const { count } = await syncPendingInvitations(inviteeAuth.user!);
 
     expect(count).toBe(1);
   });
@@ -96,7 +96,7 @@ describe("syncPendingInvitations", () => {
     const admin = getTestAdmin();
     const { data: ownerAuth } = await admin.auth.admin.getUserById(ownerUserId);
 
-    const count = await syncPendingInvitations(ownerAuth.user!);
+    const { count } = await syncPendingInvitations(ownerAuth.user!);
 
     expect(count).toBe(0);
   });
