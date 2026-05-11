@@ -20,7 +20,10 @@
     "email": "Email",
     "password": "Password",
     "submit": "Continue",
-    "error": "Authentication failed. Please verify your credentials."
+    "error": "Authentication failed. Please verify your credentials.",
+    "orLabel": "or",
+    "magicLink": "Send magic link",
+    "otpSent": "Check your email — we sent you a sign-in link."
   },
   "ownerTenants": {
     "title": "Tenant management",

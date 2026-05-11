@@ -5,9 +5,9 @@ import type { User } from "@supabase/supabase-js";
 import { logAuditEvent } from "@/lib/auth/audit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const syncPendingInvitations = async (user: User) => {
+export const syncPendingInvitations = async (user: User): Promise<number> => {
   if (!user.email) {
-    return;
+    return 0;
   }
 
   const email = user.email.toLowerCase();
@@ -20,13 +20,16 @@ export const syncPendingInvitations = async (user: User) => {
     .eq("status", "pending");
 
   if (!invitations || invitations.length === 0) {
-    return;
+    return 0;
   }
 
   for (const invitation of invitations) {
     await admin
       .from("tenant_memberships")
-      .upsert({ tenant_id: invitation.tenant_id, user_id: user.id, role: invitation.role }, { onConflict: "tenant_id,user_id" });
+      .upsert(
+        { tenant_id: invitation.tenant_id, user_id: user.id, role: invitation.role },
+        { onConflict: "tenant_id,user_id" },
+      );
 
     await admin
       .from("tenant_invitations")
@@ -44,4 +47,6 @@ export const syncPendingInvitations = async (user: User) => {
       payload: { invitationId: invitation.id, role: invitation.role, email },
     });
   }
+
+  return invitations.length;
 };

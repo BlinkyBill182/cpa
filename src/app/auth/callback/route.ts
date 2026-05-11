@@ -20,7 +20,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/${defaultLocale}/login?error=auth`);
   }
 
-  await syncPendingInvitations(data.user);
+  const invitationsResolved = await syncPendingInvitations(data.user);
 
-  return NextResponse.redirect(`${origin}${next}`);
+  const destination = invitationsResolved > 0
+    ? `/${defaultLocale}/office`
+    : next;
+
+  return NextResponse.redirect(`${origin}${destination}`);
 }
