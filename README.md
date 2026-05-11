@@ -1,63 +1,109 @@
-# CPA Platform Foundation
+# CPA Platform
 
-This repository contains the first infrastructure baseline for a multi-tenant CPA SaaS:
-
-- Supabase-backed database and authentication
-- Owner backoffice route for tenant management
-- Tenant-aware schema and row-level security policies
-- Locale-based routing (`en`, `he`)
+A multi-tenant SaaS platform for CPA offices. Each office (tenant) gets its own backoffice for managing staff and clients. The platform owner has a separate backoffice to manage all tenants.
 
 ## Stack
 
-- Next.js 16 (App Router, `proxy.ts`)
-- TypeScript strict mode
-- Supabase (`@supabase/supabase-js`, `@supabase/ssr`)
-- PostgreSQL migration under `supabase/migrations`
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript strict |
+| Database / Auth | Supabase (PostgreSQL + GoTrue) |
+| Styling | Tailwind CSS 4 |
+| Validation | Zod 4 |
+| i18n | `en` / `he` locale routing |
+| Tests | Vitest (unit + integration) + Playwright (E2E) |
+| CI | GitHub Actions |
 
-## 1) Configure environment variables
+## Routes
 
-Copy `.env.example` to `.env.local` and set values from your Supabase project:
+| URL | Purpose |
+|---|---|
+| `/{locale}/login` | Login (password + magic link) |
+| `/{locale}/backoffice/tenants` | Platform owner: manage all offices |
+| `/{locale}/backoffice/tenants/{id}/members` | Platform owner: manage office members |
+| `/{locale}/{slug}` | Public client portal for a CPA office |
+| `/{locale}/{slug}/backoffice` | CPA office staff backoffice |
+| `/{locale}/{slug}/backoffice/team` | CPA office team management |
+
+---
+
+## Setup
+
+### 1. Node version
+
+```bash
+nvm use   # pins to Node 22 via .nvmrc
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Environment variables
 
 ```bash
 cp .env.example .env.local
 ```
 
-Required keys:
+Fill in the values from your Supabase project dashboard:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+| Variable | Where to find it |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → Publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → Secret key |
+| `NEXT_PUBLIC_SITE_URL` | Your app's public URL (e.g. `http://localhost:3000`) |
 
-## 2) Apply database migration
+### 4. Apply database migrations
 
-Run SQL from `supabase/migrations/0001_multi_tenant_foundation.sql` in your Supabase SQL editor.
-
-After creating your own user in Supabase Auth, mark it as platform owner:
+Run each file in `supabase/migrations/` in order via the Supabase SQL editor, then mark your user as platform owner:
 
 ```sql
 insert into public.profiles (id, is_platform_owner)
 values ('<your-auth-user-id>', true)
-on conflict (id) do update
-set is_platform_owner = excluded.is_platform_owner;
+on conflict (id) do update set is_platform_owner = excluded.is_platform_owner;
 ```
 
-## 3) Run the app
+### 5. Install local git hooks
+
+The repository ships a post-commit code review hook. Install it once after cloning:
+
+```bash
+ln -sf "$(pwd)/.cursor/hooks/git-post-commit.sh" .git/hooks/post-commit
+chmod +x .cursor/hooks/git-post-commit.sh
+```
+
+After every `git commit` the terminal will display the changed files and copy a formatted code review prompt to your clipboard. Paste it into Cursor to run an AI review against the project conventions.
+
+### 6. Run the app
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`, then use:
+Open `http://localhost:3000` and sign in at `/en/login`.
 
-- `/en/login` for authentication
-- `/en/owner/tenants` for owner tenant management
-- `/en/office` as the protected office area placeholder
+---
 
-## Current foundation scope
+## Testing
 
-- Multi-tenant base entities (`tenants`, `tenant_memberships`, `office_clients`, `seasonal_income_records`)
-- Owner-vs-tenant access boundaries using RLS policies
-- Login flow with Supabase password auth
-- Owner-only tenant creation flow
+```bash
+npm run test:unit          # Vitest unit tests — no secrets needed
+npm run test:integration   # Vitest integration tests — needs .env.test
+npm run test:e2e           # Playwright E2E — needs .env.test + running app
+npm run test:coverage      # Unit tests with V8 coverage report
+```
 
-Next implementation step is tenant employee management and tenant-scoped office client workflows.
+Copy `.env.test.example` to `.env.test` and fill in a dedicated test Supabase project (never use the production project for tests).
+
+---
+
+## Project documentation
+
+Full architecture, conventions, DB schema, and session guard reference:
+
+- [`CONTEXT.md`](./CONTEXT.md) — full project context for AI agents and developers
+- [`CLAUDE.md`](./CLAUDE.md) — quick-reference guide for Claude Code

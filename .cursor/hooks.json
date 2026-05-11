@@ -1,6 +1,14 @@
 {
   "version": 1,
   "hooks": {
+    "afterShellExecution": [
+      {
+        "type": "prompt",
+        "prompt": "You are a code review master.\n\nA git commit was just made. Review the committed changes by running:\n  git diff HEAD~1 HEAD\n  git log -1 --format='%H %s'\n\nCheck each changed file against these project conventions:\n\n1. TypeScript strict — no `any`, no `@ts-ignore` without an explanatory comment\n2. i18n — zero hardcoded UI strings in JSX or actions; every visible text must go through a dict key in both en.json and he.json\n3. Server actions — Zod validates all FormData before touching the DB; logAuditEvent() called on every state-changing action\n4. Session guards — use requireTenantAccessBySlug / requireTenantAdminBySlug; the old cookie-based requireTenantAccess no longer exists\n5. Supabase env — no top-level process.env; use getPublicSupabaseEnv() / getServerSupabaseEnv() from @/lib/supabase/env\n6. RLS awareness — never use the admin client where the user-scoped client is sufficient\n7. CLAUDE.md — if routes, session guard signatures, dict namespaces, or action patterns changed, the relevant CLAUDE.md was updated\n\nOutput a concise review. List each violation as a bullet with the file and line. If everything looks clean, output: ✓ Looks good.",
+        "matcher": "git commit",
+        "timeout": 60
+      }
+    ],
     "stop": [
       {
         "type": "prompt",
