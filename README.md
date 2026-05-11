@@ -26,6 +26,18 @@ A multi-tenant SaaS platform for CPA offices. Each office (tenant) gets its own 
 | `/{locale}/{slug}/backoffice` | CPA office staff backoffice |
 | `/{locale}/{slug}/backoffice/team` | CPA office team management |
 
+## Access hierarchy
+
+```
+Platform Owner                → profiles.is_platform_owner = true
+└── tenant_admin              → manages team members and office settings
+    └── manager               → operational access
+        └── staff             → standard employee access
+            └── reviewer      → read-only access
+```
+
+The platform owner is a single super-admin (the developer / business operator) who can access every tenant's backoffice without being a member. Tenant roles are scoped per office and stored in `tenant_memberships.role`.
+
 ---
 
 ## Setup
