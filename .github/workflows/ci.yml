@@ -83,13 +83,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: next-build
-          path: .next/
-          retention-days: 1
-
   # ─── Job 4: E2E tests (main branch only) ────────────────────────────────────
   e2e:
     name: E2E tests
@@ -115,11 +108,8 @@ jobs:
 
       - run: npm install
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: next-build
-          path: .next/
+      - name: Build
+        run: npm run build
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
