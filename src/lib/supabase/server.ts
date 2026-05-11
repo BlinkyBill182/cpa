@@ -17,8 +17,13 @@ export const createSupabaseServerClient = async () => {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          for (const cookie of cookiesToSet) {
-            cookieStore.set(cookie.name, cookie.value, cookie.options);
+          try {
+            for (const cookie of cookiesToSet) {
+              cookieStore.set(cookie.name, cookie.value, cookie.options);
+            }
+          } catch {
+            // Server Components can read cookies but not write them.
+            // Token refresh will be persisted on the next Server Action or Route Handler call.
           }
         },
       },
