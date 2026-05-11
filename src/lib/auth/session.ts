@@ -55,6 +55,16 @@ export const requireTenantAccessBySlug = async (locale: string, slug: string) =>
 
   if (!tenant) notFound();
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_platform_owner")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.is_platform_owner) {
+    return { user, tenant, role: "tenant_admin" as TenantRole };
+  }
+
   const { data: membership } = await supabase
     .from("tenant_memberships")
     .select("role")
