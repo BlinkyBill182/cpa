@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import type { TenantRole } from "@/lib/auth/constants";
 import { getActiveTenant } from "@/lib/auth/tenant-context";
-import { syncPendingInvitations } from "@/lib/auth/invitations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const requireUser = async (locale: string) => {
@@ -12,8 +11,6 @@ export const requireUser = async (locale: string) => {
   if (error || !data.user) {
     redirect(`/${locale}/login`);
   }
-
-  await syncPendingInvitations(data.user);
 
   return data.user;
 };
