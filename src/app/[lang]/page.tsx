@@ -19,11 +19,11 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
   if (!user) {
     return (
       <section className="flex flex-col gap-6">
-        <h1 className="text-3xl font-semibold">{dict.home.title}</h1>
-        <p className="text-zinc-700">{dict.home.description}</p>
+        <h1 className="text-3xl font-semibold text-blue-900">{dict.home.title}</h1>
+        <p className="text-slate-700">{dict.home.description}</p>
         <Link
           href={`/${lang}/login`}
-          className="w-fit rounded-md bg-zinc-900 px-5 py-2.5 text-sm font-medium text-zinc-50 hover:bg-zinc-700"
+          className="w-fit rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
         >
           {dict.nav.login}
         </Link>
@@ -51,8 +51,8 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
   return (
     <section className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold">{dict.home.title}</h1>
-        <p className="text-zinc-700">{dict.home.description}</p>
+        <h1 className="text-3xl font-semibold text-blue-900">{dict.home.title}</h1>
+        <p className="text-slate-700">{dict.home.description}</p>
       </header>
 
       {error ? (
@@ -65,7 +65,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
         <div className="flex flex-col gap-3">
           <Link
             href={`/${lang}/backoffice/tenants`}
-            className="w-fit rounded-md bg-zinc-900 px-5 py-2.5 text-sm font-medium text-zinc-50 hover:bg-zinc-700"
+            className="w-fit rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
           >
             {dict.home.ownerAction}
           </Link>
@@ -78,14 +78,14 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
             <Link
               key={m.tenants!.slug}
               href={`/${lang}/${m.tenants!.slug}/backoffice`}
-              className="flex w-fit items-center gap-2 rounded-md border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="flex w-fit items-center gap-2 rounded-md border border-blue-200 px-5 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
             >
               {m.tenants!.name}
             </Link>
           ))}
         </div>
       ) : !isOwner ? (
-        <p className="text-zinc-500">{dict.home.noOffices}</p>
+        <p className="text-slate-500">{dict.home.noOffices}</p>
       ) : null}
     </section>
   );

@@ -15,9 +15,9 @@ export default async function TenantBackofficePage({ params }: TenantBackofficeP
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold">{tenant.name}</h1>
-        <p className="text-zinc-700">{dict.tenantBackoffice.description}</p>
-        <p className="text-sm text-zinc-500">
+        <h1 className="text-3xl font-semibold text-blue-900">{tenant.name}</h1>
+        <p className="text-slate-700">{dict.tenantBackoffice.description}</p>
+        <p className="text-sm text-slate-500">
           {dict.tenantBackoffice.role}: <span className="font-medium">{role}</span>
         </p>
       </header>
@@ -25,7 +25,7 @@ export default async function TenantBackofficePage({ params }: TenantBackofficeP
       <nav className="flex gap-3">
         <Link
           href={`/${lang}/${slug}/backoffice/team`}
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
         >
           {dict.tenantBackoffice.teamLink}
         </Link>

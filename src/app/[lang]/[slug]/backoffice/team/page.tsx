@@ -33,8 +33,8 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold">{dict.ownerMembers.title}</h1>
-        <p className="text-zinc-700">
+        <h1 className="text-3xl font-semibold text-blue-900">{dict.ownerMembers.title}</h1>
+        <p className="text-slate-700">
           {dict.ownerMembers.tenantLabel}: {tenant.name}
         </p>
       </header>
@@ -55,12 +55,12 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
             required
             name="email"
             type="email"
-            className="rounded-md border border-zinc-300 px-3 py-2"
+            className="rounded-md border border-blue-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span>{dict.ownerMembers.role}</span>
-          <select name="role" className="rounded-md border border-zinc-300 px-3 py-2">
+          <select name="role" className="rounded-md border border-blue-200 px-3 py-2">
             {tenantRoles.map((role) => (
               <option key={role} value={role}>
                 {role}
@@ -69,7 +69,10 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
           </select>
         </label>
         <div className="md:col-span-3">
-          <button type="submit" className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-zinc-50">
+          <button
+            type="submit"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
             {dict.ownerMembers.inviteButton}
           </button>
         </div>
@@ -78,13 +81,13 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">{dict.ownerMembers.membersHeading}</h2>
         {(memberships ?? []).length === 0 ? (
-          <p className="text-zinc-700">{dict.ownerMembers.empty}</p>
+          <p className="text-slate-700">{dict.ownerMembers.empty}</p>
         ) : null}
         {(memberships ?? []).map((membership) => (
-          <article key={membership.user_id} className="rounded-md border border-zinc-200 px-4 py-3">
+          <article key={membership.user_id} className="rounded-md border border-blue-100 px-4 py-3">
             <div className="mb-3">
               <p className="font-medium">{membership.user_id}</p>
-              <p className="text-sm text-zinc-600">{membership.role}</p>
+              <p className="text-sm text-slate-600">{membership.role}</p>
             </div>
             <div className="flex flex-wrap items-end gap-2">
               <form action={updateMemberRoleAction.bind(null, lang, slug)} className="flex items-end gap-2">
@@ -94,7 +97,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
                   <select
                     name="role"
                     defaultValue={membership.role}
-                    className="rounded-md border border-zinc-300 px-2 py-1"
+                    className="rounded-md border border-blue-200 px-2 py-1"
                   >
                     {tenantRoles.map((role) => (
                       <option key={role} value={role}>
@@ -105,7 +108,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
                 </label>
                 <button
                   type="submit"
-                  className="rounded-md border border-zinc-300 px-3 py-1 text-sm"
+                  className="rounded-md border border-blue-200 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50"
                 >
                   {dict.ownerMembers.updateRoleButton}
                 </button>
@@ -115,7 +118,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
                   <input type="hidden" name="userId" value={membership.user_id} />
                   <button
                     type="submit"
-                    className="rounded-md border border-red-300 px-3 py-1 text-sm text-red-700"
+                    className="rounded-md border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50"
                   >
                     {dict.ownerMembers.removeButton}
                   </button>
@@ -129,12 +132,12 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">{dict.ownerMembers.invitationsHeading}</h2>
         {(invitations ?? []).length === 0 ? (
-          <p className="text-zinc-700">{dict.ownerMembers.emptyInvitations}</p>
+          <p className="text-slate-700">{dict.ownerMembers.emptyInvitations}</p>
         ) : null}
         {(invitations ?? []).map((invitation) => (
-          <article key={invitation.id} className="rounded-md border border-zinc-200 px-4 py-3">
+          <article key={invitation.id} className="rounded-md border border-blue-100 px-4 py-3">
             <p className="font-medium">{invitation.invited_email}</p>
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-slate-600">
               {invitation.role} — {invitation.status}
             </p>
           </article>
