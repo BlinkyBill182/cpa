@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { LanguageSwitcher } from "./language-switcher";
+
 type TopNavProps = {
   locale: string;
   isOwner: boolean;
@@ -20,6 +22,7 @@ export const TopNav = ({ locale, isOwner, isLoggedIn, signOut, labels }: TopNavP
           {labels.home}
         </Link>
         <div className="flex items-center gap-4 text-sm">
+          <LanguageSwitcher currentLocale={locale} />
           {isOwner ? (
             <Link href={`/${locale}/backoffice/tenants`} className="text-blue-700 hover:text-blue-900">
               {labels.backoffice}

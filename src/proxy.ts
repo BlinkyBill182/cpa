@@ -16,6 +16,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const currentLocale =
+    locales.find((locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) ??
+    defaultLocale;
+
   const pathnameHasLocale = locales.some((locale) => {
     return pathname === `/${locale}` || pathname.startsWith(`/${locale}/`);
   });
@@ -26,7 +30,9 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(nextUrl);
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-locale", currentLocale);
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {

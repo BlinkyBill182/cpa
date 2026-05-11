@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { HtmlDirSync } from "@/components/layout/html-dir-sync";
 import { TopNav } from "@/components/layout/top-nav";
 import { hasLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
@@ -37,6 +38,7 @@ export default async function LocaleLayout({
 
   return (
     <>
+      <HtmlDirSync locale={lang} />
       <TopNav
         locale={lang}
         isOwner={isOwner}
