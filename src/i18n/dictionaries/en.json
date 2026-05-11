@@ -28,24 +28,23 @@
     "name": "Tenant name",
     "slug": "Tenant slug",
     "submit": "Create tenant",
-    "empty": "No tenants were created yet.",
-    "manageMembers": "Manage members"
-  },
-  "ownerMembers": {
-    "title": "Owner member assignment",
-    "tenantLabel": "Tenant",
-    "userId": "User ID",
-    "role": "Role",
-    "submit": "Assign member",
-    "empty": "No members assigned yet.",
-    "error": "Member assignment failed. Please verify input."
+    "empty": "No tenants were created yet."
   },
   "office": {
     "title": "Office backoffice",
-    "description": "Choose active tenant and continue to team management.",
-    "selectTenant": "Active tenant",
-    "selectTenantPlaceholder": "Select a tenant",
+    "description": "Select your office to get started.",
+    "selectTenant": "Select office",
+    "selectTenantPlaceholder": "Choose an office...",
     "continue": "Continue",
-    "error": "You must select a valid tenant."
+    "error": "Access error. Please try again."
+  },
+  "ownerMembers": {
+    "title": "Member management",
+    "tenantLabel": "Office",
+    "userId": "User ID (UUID)",
+    "role": "Role",
+    "submit": "Assign member",
+    "empty": "No members yet.",
+    "error": "Action failed. Please verify the input."
   }
 }

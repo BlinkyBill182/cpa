@@ -20,7 +20,6 @@ export const TopNav = ({ locale, labels }: TopNavProps) => {
         <div className="flex items-center gap-4 text-sm">
           <Link href={`/${locale}/owner/tenants`}>{labels.ownerTenants}</Link>
           <Link href={`/${locale}/office`}>{labels.office}</Link>
-          <Link href={`/${locale}/office/team`}>Team</Link>
           <Link href={`/${locale}/login`}>{labels.login}</Link>
         </div>
       </nav>

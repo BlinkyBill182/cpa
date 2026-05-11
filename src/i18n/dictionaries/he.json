@@ -28,24 +28,23 @@
     "name": "שם הדייר",
     "slug": "מזהה דייר",
     "submit": "יצירת דייר",
-    "empty": "עדיין לא נוצרו דיירים.",
-    "manageMembers": "ניהול עובדים"
-  },
-  "ownerMembers": {
-    "title": "שיוך עובדים על ידי בעלים",
-    "tenantLabel": "דייר",
-    "userId": "מזהה משתמש",
-    "role": "תפקיד",
-    "submit": "שיוך עובד",
-    "empty": "עדיין לא שובצו עובדים.",
-    "error": "שיוך עובד נכשל. נא לבדוק נתונים."
+    "empty": "עדיין לא נוצרו דיירים."
   },
   "office": {
     "title": "בק אופיס משרד",
-    "description": "בחרו דייר פעיל והמשיכו לניהול הצוות.",
-    "selectTenant": "דייר פעיל",
-    "selectTenantPlaceholder": "בחרו דייר",
+    "description": "בחרו את המשרד שלכם להתחיל.",
+    "selectTenant": "בחירת משרד",
+    "selectTenantPlaceholder": "בחרו משרד...",
     "continue": "המשך",
-    "error": "יש לבחור דייר חוקי."
+    "error": "שגיאת גישה. אנא נסו שנית."
+  },
+  "ownerMembers": {
+    "title": "ניהול חברי צוות",
+    "tenantLabel": "משרד",
+    "userId": "מזהה משתמש (UUID)",
+    "role": "תפקיד",
+    "submit": "שיוך חבר",
+    "empty": "אין חברים עדיין.",
+    "error": "הפעולה נכשלה. אנא בדקו את הקלט."
   }
 }

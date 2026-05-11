@@ -20,17 +20,14 @@ export default async function OwnerTenantMembersPage({
 
   const admin = createSupabaseAdminClient();
 
-  const { data: tenant } = await admin
-    .from("tenants")
-    .select("id, name, slug")
-    .eq("id", tenantId)
-    .single();
-
-  const { data: memberships } = await admin
-    .from("tenant_memberships")
-    .select("user_id, role, created_at")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false });
+  const [{ data: tenant }, { data: memberships }] = await Promise.all([
+    admin.from("tenants").select("id, name, slug").eq("id", tenantId).single(),
+    admin
+      .from("tenant_memberships")
+      .select("user_id, role, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false }),
+  ]);
 
   return (
     <section className="flex w-full flex-col gap-8">
@@ -56,7 +53,8 @@ export default async function OwnerTenantMembersPage({
           <input
             required
             name="userId"
-            className="rounded-md border border-zinc-300 px-3 py-2"
+            className="rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm"
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
             minLength={36}
             maxLength={36}
           />
@@ -82,12 +80,13 @@ export default async function OwnerTenantMembersPage({
       </form>
 
       <section className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold">Members</h2>
         {(memberships ?? []).length === 0 ? (
           <p className="text-zinc-700">{dict.ownerMembers.empty}</p>
         ) : null}
         {(memberships ?? []).map((membership) => (
           <article key={membership.user_id} className="rounded-md border border-zinc-200 px-4 py-3">
-            <h2 className="font-medium">{membership.user_id}</h2>
+            <p className="font-mono text-sm font-medium">{membership.user_id}</p>
             <p className="text-sm text-zinc-600">{membership.role}</p>
           </article>
         ))}

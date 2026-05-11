@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { getDictionary } from "@/i18n/get-dictionary";
 import { requirePlatformOwner } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -70,12 +68,6 @@ export default async function OwnerTenantsPage({ params, searchParams }: OwnerTe
           <article key={tenant.id} className="rounded-md border border-zinc-200 px-4 py-3">
             <h2 className="font-medium">{tenant.name}</h2>
             <p className="text-sm text-zinc-600">{tenant.slug}</p>
-            <Link
-              href={`/${lang}/owner/tenants/${tenant.id}/members`}
-              className="mt-2 inline-block text-sm font-medium text-zinc-900 underline"
-            >
-              {dict.ownerTenants.manageMembers}
-            </Link>
           </article>
         ))}
       </section>
