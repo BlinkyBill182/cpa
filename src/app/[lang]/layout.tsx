@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { TopNav } from "@/components/layout/top-nav";
 import { hasLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
+import { signOutAction } from "@/app/[lang]/login/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function generateStaticParams() {
@@ -36,7 +37,13 @@ export default async function LocaleLayout({
 
   return (
     <>
-      <TopNav locale={lang} isOwner={isOwner} labels={dict.nav} />
+      <TopNav
+        locale={lang}
+        isOwner={isOwner}
+        isLoggedIn={!!user}
+        signOut={signOutAction.bind(null, lang)}
+        labels={dict.nav}
+      />
       <main className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-10">{children}</main>
     </>
   );

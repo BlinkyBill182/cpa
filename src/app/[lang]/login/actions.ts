@@ -76,6 +76,14 @@ export const signInAction = async (locale: string, formData: FormData) => {
   redirect(destination);
 };
 
+export const signOutAction = async (locale: string) => {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  await supabase.auth.signOut();
+  await logAuditEvent({ action: "auth.sign_out", actorUserId: user?.id });
+  redirect(`/${locale}/login`);
+};
+
 export const sendMagicLinkAction = async (locale: string, formData: FormData) => {
   const parsed = otpSchema.safeParse({ email: formData.get("email") });
 
