@@ -21,14 +21,14 @@ test.describe("Login page", () => {
     await expect(page.getByText(/authentication failed/i)).toBeVisible();
   });
 
-  test("redirects to home after successful login", async ({ page }) => {
+  test("redirects to backoffice after successful owner login", async ({ page }) => {
     test.skip(!OWNER_EMAIL || !OWNER_PASSWORD, "E2E_OWNER_EMAIL and E2E_OWNER_PASSWORD required");
     await page.goto("/en/login");
     await page.getByLabel(/email/i).first().fill(OWNER_EMAIL);
     await page.getByLabel(/password/i).fill(OWNER_PASSWORD);
     await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForURL("/en");
-    await expect(page).toHaveURL("/en");
+    await page.waitForURL("/en/backoffice/tenants", { timeout: 15000 });
+    await expect(page).toHaveURL("/en/backoffice/tenants");
   });
 
   test("magic link form submits and navigates away from the blank form", async ({ page }) => {
@@ -44,18 +44,18 @@ test.describe("Login page", () => {
 });
 
 test.describe("Protected routes redirect unauthenticated users", () => {
-  test("/en/owner/tenants redirects to login", async ({ page }) => {
-    await page.goto("/en/owner/tenants");
+  test("/en/backoffice/tenants redirects to login", async ({ page }) => {
+    await page.goto("/en/backoffice/tenants");
     await expect(page).toHaveURL(/\/en\/login/);
   });
 
-  test("/en/office redirects to login", async ({ page }) => {
-    await page.goto("/en/office");
+  test("/en/some-office/backoffice redirects to login", async ({ page }) => {
+    await page.goto("/en/some-office/backoffice");
     await expect(page).toHaveURL(/\/en\/login/);
   });
 
-  test("/en/office/team redirects to login", async ({ page }) => {
-    await page.goto("/en/office/team");
+  test("/en/some-office/backoffice/team redirects to login", async ({ page }) => {
+    await page.goto("/en/some-office/backoffice/team");
     await expect(page).toHaveURL(/\/en\/login/);
   });
 });

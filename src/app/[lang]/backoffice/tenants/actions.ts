@@ -8,6 +8,8 @@ import { logAuditEvent } from "@/lib/auth/audit";
 import { requirePlatformOwner } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+const RESERVED_SLUGS = new Set(["backoffice", "login", "auth", "api", "admin", "en", "he"]);
+
 const tenantSchema = z.object({
   name: z.string().trim().min(2).max(120),
   slug: z
@@ -28,7 +30,11 @@ export const createTenantAction = async (locale: string, formData: FormData) => 
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/owner/tenants?error=validation`);
+    redirect(`/${locale}/backoffice/tenants?error=validation`);
+  }
+
+  if (RESERVED_SLUGS.has(parsed.data.slug)) {
+    redirect(`/${locale}/backoffice/tenants?error=reserved_slug`);
   }
 
   const { error } = await supabase.from("tenants").insert({
@@ -38,7 +44,7 @@ export const createTenantAction = async (locale: string, formData: FormData) => 
   });
 
   if (error) {
-    redirect(`/${locale}/owner/tenants?error=insert`);
+    redirect(`/${locale}/backoffice/tenants?error=insert`);
   }
 
   await logAuditEvent({
@@ -47,5 +53,5 @@ export const createTenantAction = async (locale: string, formData: FormData) => 
     payload: { name: parsed.data.name, slug: parsed.data.slug },
   });
 
-  revalidatePath(`/${locale}/owner/tenants`);
+  revalidatePath(`/${locale}/backoffice/tenants`);
 };

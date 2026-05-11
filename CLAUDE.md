@@ -15,6 +15,27 @@ Full project context: @CONTEXT.md
 - **TypeScript strict** — no `any`, no `@ts-ignore` without an explanatory comment.
 - **Update CONTEXT.md** — after any non-trivial change, update the relevant section of `CONTEXT.md`.
 
+## Route overview
+
+```
+/[locale]/backoffice/tenants              → Platform owner: list/create tenants  (STATIC)
+/[locale]/backoffice/tenants/[id]/members → Platform owner: manage tenant members (STATIC)
+/[locale]/[slug]                          → Public client portal (no auth)        (DYNAMIC)
+/[locale]/[slug]/backoffice               → CPA office backoffice                 (DYNAMIC)
+/[locale]/[slug]/backoffice/team          → CPA office team management            (DYNAMIC)
+```
+
+Static routes always win over `[slug]`. Reserved slugs (`backoffice`, `login`, `auth`, `api`, `admin`, `en`, `he`) are blocked at tenant creation time.
+
+## Session guards quick reference
+
+```ts
+await requireUser(locale)                        // any authenticated user
+await requirePlatformOwner(locale)               // platform owner only
+await requireTenantAccessBySlug(locale, slug)    // tenant member (slug from URL params)
+await requireTenantAdminBySlug(locale, slug)     // tenant_admin role (slug from URL params)
+```
+
 ## Running the project
 
 ```bash

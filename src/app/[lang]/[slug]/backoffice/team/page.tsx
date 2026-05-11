@@ -1,33 +1,33 @@
 import { getDictionary } from "@/i18n/get-dictionary";
 import { tenantRoles } from "@/lib/auth/constants";
-import { requireTenantAdmin } from "@/lib/auth/session";
+import { requireTenantAdminBySlug } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { inviteMemberAction, removeMemberAction, updateMemberRoleAction } from "./actions";
 
-type OfficeTeamPageProps = PageProps<"/[lang]/office/team"> & {
+type TenantTeamPageProps = {
+  params: Promise<{ lang: string; slug: string }>;
   searchParams: Promise<{ error?: string }>;
 };
 
-export default async function OfficeTeamPage({ params, searchParams }: OfficeTeamPageProps) {
-  const { lang } = await params;
-  const currentSearchParams = await searchParams;
+export default async function TenantTeamPage({ params, searchParams }: TenantTeamPageProps) {
+  const { lang, slug } = await params;
+  const { error } = await searchParams;
   const dict = await getDictionary(lang);
-  const { user, tenantId } = await requireTenantAdmin(lang);
+  const { user, tenant } = await requireTenantAdminBySlug(lang, slug);
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: memberships }, { data: invitations }, { data: tenant }] = await Promise.all([
+  const [{ data: memberships }, { data: invitations }] = await Promise.all([
     supabase
       .from("tenant_memberships")
       .select("user_id, role, created_at")
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", tenant.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("tenant_invitations")
       .select("id, invited_email, role, status, invited_at")
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", tenant.id)
       .order("invited_at", { ascending: false }),
-    supabase.from("tenants").select("name").eq("id", tenantId).single(),
   ]);
 
   return (
@@ -35,20 +35,28 @@ export default async function OfficeTeamPage({ params, searchParams }: OfficeTea
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold">{dict.ownerMembers.title}</h1>
         <p className="text-zinc-700">
-          {dict.ownerMembers.tenantLabel}: {tenant?.name ?? tenantId}
+          {dict.ownerMembers.tenantLabel}: {tenant.name}
         </p>
       </header>
 
-      {currentSearchParams.error ? (
+      {error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {dict.ownerMembers.error}
         </p>
       ) : null}
 
-      <form action={inviteMemberAction.bind(null, lang)} className="grid max-w-3xl gap-4 md:grid-cols-3">
+      <form
+        action={inviteMemberAction.bind(null, lang, slug)}
+        className="grid max-w-3xl gap-4 md:grid-cols-3"
+      >
         <label className="flex flex-col gap-1 text-sm md:col-span-2">
           <span>{dict.login.email}</span>
-          <input required name="email" type="email" className="rounded-md border border-zinc-300 px-3 py-2" />
+          <input
+            required
+            name="email"
+            type="email"
+            className="rounded-md border border-zinc-300 px-3 py-2"
+          />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span>{dict.ownerMembers.role}</span>
@@ -79,11 +87,15 @@ export default async function OfficeTeamPage({ params, searchParams }: OfficeTea
               <p className="text-sm text-zinc-600">{membership.role}</p>
             </div>
             <div className="flex flex-wrap items-end gap-2">
-              <form action={updateMemberRoleAction.bind(null, lang)} className="flex items-end gap-2">
+              <form action={updateMemberRoleAction.bind(null, lang, slug)} className="flex items-end gap-2">
                 <input type="hidden" name="userId" value={membership.user_id} />
                 <label className="flex flex-col gap-1 text-sm">
                   <span>{dict.ownerMembers.role}</span>
-                  <select name="role" defaultValue={membership.role} className="rounded-md border border-zinc-300 px-2 py-1">
+                  <select
+                    name="role"
+                    defaultValue={membership.role}
+                    className="rounded-md border border-zinc-300 px-2 py-1"
+                  >
                     {tenantRoles.map((role) => (
                       <option key={role} value={role}>
                         {role}
@@ -91,14 +103,20 @@ export default async function OfficeTeamPage({ params, searchParams }: OfficeTea
                     ))}
                   </select>
                 </label>
-                <button type="submit" className="rounded-md border border-zinc-300 px-3 py-1 text-sm">
+                <button
+                  type="submit"
+                  className="rounded-md border border-zinc-300 px-3 py-1 text-sm"
+                >
                   {dict.ownerMembers.updateRoleButton}
                 </button>
               </form>
               {membership.user_id !== user.id ? (
-                <form action={removeMemberAction.bind(null, lang)}>
+                <form action={removeMemberAction.bind(null, lang, slug)}>
                   <input type="hidden" name="userId" value={membership.user_id} />
-                  <button type="submit" className="rounded-md border border-red-300 px-3 py-1 text-sm text-red-700">
+                  <button
+                    type="submit"
+                    className="rounded-md border border-red-300 px-3 py-1 text-sm text-red-700"
+                  >
                     {dict.ownerMembers.removeButton}
                   </button>
                 </form>

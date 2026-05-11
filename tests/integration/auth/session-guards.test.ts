@@ -14,10 +14,6 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/tenant-context", () => ({
-  getActiveTenant: vi.fn(),
-}));
-
 const SLUG_PREFIX = "test-session-guards";
 const OWNER_EMAIL = `owner-guards-${Date.now()}@test.example`;
 const MEMBER_EMAIL = `member-guards-${Date.now()}@test.example`;
@@ -27,7 +23,7 @@ const PASSWORD = "TestPassword123!";
 let ownerUserId: string;
 let memberUserId: string;
 let outsiderUserId: string;
-let tenantId: string;
+let tenantSlug: string;
 
 const makeServerClientFor = (accessToken: string) => {
   const env = getPublicSupabaseEnv();
@@ -50,21 +46,21 @@ beforeEach(async () => {
   const outsider = await createTestUser(OUTSIDER_EMAIL, PASSWORD);
   outsiderUserId = outsider.id;
 
+  tenantSlug = `${SLUG_PREFIX}-${Date.now()}`;
+
   const { data: tenant } = await admin
     .from("tenants")
     .insert({
       name: "Guards Test Tenant",
-      slug: `${SLUG_PREFIX}-${Date.now()}`,
+      slug: tenantSlug,
       created_by: ownerUserId,
     })
     .select("id")
     .single();
 
-  tenantId = tenant!.id;
-
   await admin
     .from("tenant_memberships")
-    .insert({ tenant_id: tenantId, user_id: memberUserId, role: "staff" });
+    .insert({ tenant_id: tenant!.id, user_id: memberUserId, role: "staff" });
 });
 
 afterEach(async () => {
@@ -93,37 +89,33 @@ describe("requirePlatformOwner", () => {
   });
 });
 
-describe("requireTenantAccess", () => {
-  it("redirects when no active tenant cookie is set", async () => {
-    const { requireTenantAccess } = await import("@/lib/auth/session");
+describe("requireTenantAccessBySlug", () => {
+  it("calls notFound when the slug does not match any tenant", async () => {
+    const { requireTenantAccessBySlug } = await import("@/lib/auth/session");
     const { createSupabaseServerClient } = await import("@/lib/supabase/server");
-    const { getActiveTenant } = await import("@/lib/auth/tenant-context");
 
     const { session } = await signInTestUser(MEMBER_EMAIL, PASSWORD);
     const client = makeServerClientFor(session!.access_token);
     vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
-    vi.mocked(getActiveTenant).mockResolvedValue(null);
 
     try {
-      await requireTenantAccess("en");
-      expect.fail("Expected redirect");
+      await requireTenantAccessBySlug("en", "slug-that-does-not-exist");
+      expect.fail("Expected notFound");
     } catch (error) {
-      expectRedirectTo(error, "tenant_required");
+      expect((error as Error).message).toMatch(/not.?found/i);
     }
   });
 
-  it("redirects when user is not a member of the active tenant", async () => {
-    const { requireTenantAccess } = await import("@/lib/auth/session");
+  it("redirects when user is not a member of the tenant", async () => {
+    const { requireTenantAccessBySlug } = await import("@/lib/auth/session");
     const { createSupabaseServerClient } = await import("@/lib/supabase/server");
-    const { getActiveTenant } = await import("@/lib/auth/tenant-context");
 
     const { session } = await signInTestUser(OUTSIDER_EMAIL, PASSWORD);
     const client = makeServerClientFor(session!.access_token);
     vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
-    vi.mocked(getActiveTenant).mockResolvedValue(tenantId);
 
     try {
-      await requireTenantAccess("en");
+      await requireTenantAccessBySlug("en", tenantSlug);
       expect.fail("Expected redirect");
     } catch (error) {
       expectRedirectTo(error, "tenant_access");

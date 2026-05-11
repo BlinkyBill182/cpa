@@ -5,14 +5,13 @@
   "nav": {
     "home": "דף הבית",
     "login": "התחברות",
-    "ownerTenants": "ניהול משרדים",
-    "office": "פורטל משרד"
+    "backoffice": "בק אופיס פלטפורמה"
   },
   "home": {
-    "title": "תשתית המערכת הוכנה",
-    "description": "ארכיטקטורת רב-דיירים, בק אופיס בעלים, ומערכת הזדהות הוקמו.",
-    "ownerAction": "מעבר לבק אופיס בעלים",
-    "officeAction": "מעבר לפורטל משרד"
+    "title": "פלטפורמת רואי חשבון",
+    "description": "בחרו את היעד שלכם.",
+    "ownerAction": "בק אופיס פלטפורמה",
+    "noOffices": "אין לכם גישה למשרד כלשהו. פנו למנהל המערכת."
   },
   "login": {
     "title": "התחברות",
@@ -30,17 +29,12 @@
     "description": "יצירה וניהול של משרדי רואי חשבון.",
     "name": "שם הדייר",
     "slug": "מזהה דייר",
+    "slugHint": "אותיות קטנות, מספרים ומקפים בלבד.",
     "submit": "יצירת דייר",
     "empty": "עדיין לא נוצרו דיירים.",
-    "manageMembers": "ניהול חברים"
-  },
-  "office": {
-    "title": "בק אופיס משרד",
-    "description": "בחרו את המשרד שלכם להתחיל.",
-    "selectTenant": "בחירת משרד",
-    "selectTenantPlaceholder": "בחרו משרד...",
-    "continue": "המשך",
-    "error": "שגיאת גישה. אנא נסו שנית."
+    "manageMembers": "ניהול חברים",
+    "openBackoffice": "פתח בק אופיס",
+    "error": "הפעולה נכשלה. אנא בדקו את הקלט."
   },
   "ownerMembers": {
     "title": "ניהול חברי צוות",
@@ -50,11 +44,17 @@
     "submit": "שיוך חבר",
     "empty": "אין חברים עדיין.",
     "error": "הפעולה נכשלה. אנא בדקו את הקלט.",
-    "membersHeading": "חברים",
-    "inviteButton": "הזמן חבר",
-    "updateRoleButton": "עדכן תפקיד",
+    "membersHeading": "חברים נוכחיים",
+    "inviteButton": "שלח הזמנה",
+    "updateRoleButton": "עדכן",
     "removeButton": "הסר",
-    "invitationsHeading": "הזמנות",
+    "invitationsHeading": "הזמנות ממתינות",
     "emptyInvitations": "אין הזמנות ממתינות."
+  },
+  "tenantBackoffice": {
+    "title": "בק אופיס",
+    "description": "נהלו את משרד רואי החשבון שלכם.",
+    "role": "התפקיד שלך",
+    "teamLink": "ניהול צוות"
   }
 }

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "type": "prompt",
+        "prompt": "Review the files that were edited this turn. If any source files under src/ were changed in a way that affects: route structure, session guard names/signatures, i18n dict namespaces, server action patterns, or test helper APIs — and if the relevant CLAUDE.md file(s) were NOT updated this turn — output a brief followup_message reminding the agent to update them now. Otherwise output an empty followup_message.",
+        "timeout": 15
+      }
+    ]
+  }
+}

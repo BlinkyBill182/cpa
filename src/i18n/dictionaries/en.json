@@ -5,14 +5,13 @@
   "nav": {
     "home": "Home",
     "login": "Login",
-    "ownerTenants": "Owner tenants",
-    "office": "Office"
+    "backoffice": "Platform Backoffice"
   },
   "home": {
-    "title": "CPA SaaS foundation is ready",
-    "description": "Multi-tenant architecture, owner backoffice, and authentication are now initialized.",
-    "ownerAction": "Go to owner backoffice",
-    "officeAction": "Go to office portal"
+    "title": "CPA Platform",
+    "description": "Select your destination below.",
+    "ownerAction": "Platform Backoffice",
+    "noOffices": "You have no office access yet. Contact your administrator."
   },
   "login": {
     "title": "Sign in",
@@ -30,17 +29,12 @@
     "description": "Create and manage CPA office tenants.",
     "name": "Tenant name",
     "slug": "Tenant slug",
+    "slugHint": "Lowercase letters, numbers, and hyphens only.",
     "submit": "Create tenant",
-    "empty": "No tenants were created yet.",
-    "manageMembers": "Manage members"
-  },
-  "office": {
-    "title": "Office backoffice",
-    "description": "Select your office to get started.",
-    "selectTenant": "Select office",
-    "selectTenantPlaceholder": "Choose an office...",
-    "continue": "Continue",
-    "error": "Access error. Please try again."
+    "empty": "No tenants yet.",
+    "manageMembers": "Manage members",
+    "openBackoffice": "Open backoffice",
+    "error": "Action failed. Please verify the input."
   },
   "ownerMembers": {
     "title": "Member management",
@@ -50,11 +44,17 @@
     "submit": "Assign member",
     "empty": "No members yet.",
     "error": "Action failed. Please verify the input.",
-    "membersHeading": "Members",
-    "inviteButton": "Invite member",
-    "updateRoleButton": "Update role",
+    "membersHeading": "Current members",
+    "inviteButton": "Send invite",
+    "updateRoleButton": "Update",
     "removeButton": "Remove",
-    "invitationsHeading": "Invitations",
+    "invitationsHeading": "Pending invitations",
     "emptyInvitations": "No pending invitations."
+  },
+  "tenantBackoffice": {
+    "title": "Backoffice",
+    "description": "Manage your CPA office.",
+    "role": "Your role",
+    "teamLink": "Manage team"
   }
 }

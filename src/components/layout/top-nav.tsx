@@ -6,8 +6,7 @@ type TopNavProps = {
   labels: {
     home: string;
     login: string;
-    ownerTenants: string;
-    office: string;
+    backoffice: string;
   };
 };
 
@@ -19,8 +18,9 @@ export const TopNav = ({ locale, isOwner, labels }: TopNavProps) => {
           {labels.home}
         </Link>
         <div className="flex items-center gap-4 text-sm">
-          {isOwner ? <Link href={`/${locale}/owner/tenants`}>{labels.ownerTenants}</Link> : null}
-          <Link href={`/${locale}/office`}>{labels.office}</Link>
+          {isOwner ? (
+            <Link href={`/${locale}/backoffice/tenants`}>{labels.backoffice}</Link>
+          ) : null}
           <Link href={`/${locale}/login`}>{labels.login}</Link>
         </div>
       </nav>

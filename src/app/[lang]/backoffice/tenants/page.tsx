@@ -4,14 +4,15 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { createTenantAction } from "./actions";
 
-type OwnerTenantsPageProps = PageProps<"/[lang]/owner/tenants"> & {
+type BackofficeTenantsPageProps = {
+  params: Promise<{ lang: string }>;
   searchParams: Promise<{ error?: string }>;
 };
 
-export default async function OwnerTenantsPage({ params, searchParams }: OwnerTenantsPageProps) {
+export default async function BackofficeTenantsPage({ params, searchParams }: BackofficeTenantsPageProps) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
-  const currentSearchParams = await searchParams;
+  const { error } = await searchParams;
   await requirePlatformOwner(lang);
 
   const supabase = await createSupabaseServerClient();
@@ -27,9 +28,9 @@ export default async function OwnerTenantsPage({ params, searchParams }: OwnerTe
         <p className="text-zinc-700">{dict.ownerTenants.description}</p>
       </header>
 
-      {currentSearchParams.error ? (
+      {error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {dict.login.error}
+          {dict.ownerTenants.error}
         </p>
       ) : null}
 
@@ -43,15 +44,18 @@ export default async function OwnerTenantsPage({ params, searchParams }: OwnerTe
             minLength={2}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span>{dict.ownerTenants.slug}</span>
-          <input
-            required
-            name="slug"
-            className="rounded-md border border-zinc-300 px-3 py-2"
-            pattern="^[a-z0-9-]+$"
-          />
-        </label>
+        <div className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-1">
+            <span>{dict.ownerTenants.slug}</span>
+            <input
+              required
+              name="slug"
+              className="rounded-md border border-zinc-300 px-3 py-2"
+              pattern="^[a-z0-9-]+$"
+            />
+          </label>
+          <span className="text-xs text-zinc-500">{dict.ownerTenants.slugHint}</span>
+        </div>
         <div className="md:col-span-2">
           <button
             type="submit"
@@ -63,19 +67,32 @@ export default async function OwnerTenantsPage({ params, searchParams }: OwnerTe
       </form>
 
       <section className="flex flex-col gap-3">
-        {(tenants ?? []).length === 0 ? <p className="text-zinc-700">{dict.ownerTenants.empty}</p> : null}
+        {(tenants ?? []).length === 0 ? (
+          <p className="text-zinc-700">{dict.ownerTenants.empty}</p>
+        ) : null}
         {(tenants ?? []).map((tenant) => (
-          <article key={tenant.id} className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3">
+          <article
+            key={tenant.id}
+            className="flex items-center justify-between rounded-md border border-zinc-200 px-4 py-3"
+          >
             <div>
               <h2 className="font-medium">{tenant.name}</h2>
               <p className="text-sm text-zinc-600">{tenant.slug}</p>
             </div>
-            <a
-              href={`/${lang}/owner/tenants/${tenant.id}/members`}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-            >
-              {dict.ownerTenants.manageMembers}
-            </a>
+            <div className="flex gap-2">
+              <a
+                href={`/${lang}/backoffice/tenants/${tenant.id}/members`}
+                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                {dict.ownerTenants.manageMembers}
+              </a>
+              <a
+                href={`/${lang}/${tenant.slug}/backoffice`}
+                className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-zinc-50 hover:bg-zinc-700"
+              >
+                {dict.ownerTenants.openBackoffice}
+              </a>
+            </div>
           </article>
         ))}
       </section>

@@ -1,9 +1,8 @@
 import "server-only";
 
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { TenantRole } from "@/lib/auth/constants";
-import { getActiveTenant } from "@/lib/auth/tenant-context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const requireUser = async (locale: string) => {
@@ -34,39 +33,38 @@ export const requirePlatformOwner = async (locale: string) => {
   return user;
 };
 
-export const requireTenantAccess = async (locale: string) => {
+export const requireTenantAccessBySlug = async (locale: string, slug: string) => {
   const user = await requireUser(locale);
-  const activeTenantId = await getActiveTenant();
-
-  if (!activeTenantId) {
-    redirect(`/${locale}/office?error=tenant_required`);
-  }
-
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id, name, slug")
+    .eq("slug", slug)
+    .single();
+
+  if (!tenant) notFound();
+
+  const { data: membership } = await supabase
     .from("tenant_memberships")
-    .select("tenant_id, role")
-    .eq("tenant_id", activeTenantId)
+    .select("role")
+    .eq("tenant_id", tenant.id)
     .eq("user_id", user.id)
     .single();
 
-  if (error || !data) {
-    redirect(`/${locale}/office?error=tenant_access`);
+  if (!membership) {
+    redirect(`/${locale}?error=tenant_access`);
   }
 
-  return {
-    user,
-    tenantId: data.tenant_id,
-    role: data.role as TenantRole,
-  };
+  return { user, tenant, role: membership.role as TenantRole };
 };
 
-export const requireTenantAdmin = async (locale: string) => {
-  const membership = await requireTenantAccess(locale);
+export const requireTenantAdminBySlug = async (locale: string, slug: string) => {
+  const access = await requireTenantAccessBySlug(locale, slug);
 
-  if (membership.role !== "tenant_admin") {
-    redirect(`/${locale}/office?error=forbidden`);
+  if (access.role !== "tenant_admin") {
+    redirect(`/${locale}/${slug}/backoffice?error=forbidden`);
   }
 
-  return membership;
+  return access;
 };

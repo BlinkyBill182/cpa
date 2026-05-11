@@ -1,0 +1,37 @@
+---
+description: When to update CLAUDE.md documentation files after code changes
+alwaysApply: true
+---
+
+# CLAUDE.md Update Policy
+
+After any non-trivial change, update the relevant `CLAUDE.md` file(s) **in the same turn** as the code change.
+
+## Trigger conditions
+
+Update **`src/CLAUDE.md`** when you change:
+- Route structure (add/remove/rename pages or layouts under `src/app/`)
+- Session guard names or signatures (`requireUser`, `requirePlatformOwner`, `requireTenantAccessBySlug`, `requireTenantAdminBySlug`)
+- Server action patterns (new `bind(null, ...)` arguments, new action files)
+- i18n dict namespaces or top-level keys
+- Supabase client usage patterns
+
+Update **`tests/CLAUDE.md`** when you change:
+- Test helper APIs (`tests/helpers/`)
+- Mock strategy for integration tests
+- E2E test URL patterns or sign-in helpers
+
+Update **`CLAUDE.md`** (root) when you change:
+- Session guard signatures
+- Route overview
+- Reserved slugs list
+- Running commands or secrets
+
+Update **`supabase/CLAUDE.md`** when you change:
+- Migration naming conventions
+- Seed data patterns
+
+## What does NOT require an update
+- Bug fixes that don't change API surface
+- Style/copy changes
+- Adding a new page that follows existing patterns exactly

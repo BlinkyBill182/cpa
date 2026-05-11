@@ -7,7 +7,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? `/${defaultLocale}`;
 
   if (!code) {
     return NextResponse.redirect(`${origin}/${defaultLocale}/login?error=auth`);
@@ -20,11 +19,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/${defaultLocale}/login?error=auth`);
   }
 
-  const invitationsResolved = await syncPendingInvitations(data.user);
+  const { count, firstSlug } = await syncPendingInvitations(data.user);
 
-  const destination = invitationsResolved > 0
-    ? `/${defaultLocale}/office`
-    : next;
+  const destination =
+    count > 0 && firstSlug
+      ? `/${defaultLocale}/${firstSlug}/backoffice`
+      : `/${defaultLocale}`;
 
   return NextResponse.redirect(`${origin}${destination}`);
 }

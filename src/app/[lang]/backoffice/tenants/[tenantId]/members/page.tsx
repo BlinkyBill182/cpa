@@ -5,17 +5,18 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 import { assignMemberByUserIdAction } from "./actions";
 
-type OwnerTenantMembersPageProps = PageProps<"/[lang]/owner/tenants/[tenantId]/members"> & {
+type BackofficeMembersPageProps = {
+  params: Promise<{ lang: string; tenantId: string }>;
   searchParams: Promise<{ error?: string }>;
 };
 
-export default async function OwnerTenantMembersPage({
+export default async function BackofficeMembersPage({
   params,
   searchParams,
-}: OwnerTenantMembersPageProps) {
+}: BackofficeMembersPageProps) {
   const { lang, tenantId } = await params;
   const dict = await getDictionary(lang);
-  const currentSearchParams = await searchParams;
+  const { error } = await searchParams;
   await requirePlatformOwner(lang);
 
   const admin = createSupabaseAdminClient();
@@ -38,7 +39,7 @@ export default async function OwnerTenantMembersPage({
         </p>
       </header>
 
-      {currentSearchParams.error ? (
+      {error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {dict.ownerMembers.error}
         </p>

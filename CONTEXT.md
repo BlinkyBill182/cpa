@@ -40,23 +40,24 @@ cpa/
 │   ├── app/
 │   │   ├── [lang]/                     # All user-facing pages, locale-scoped
 │   │   │   ├── layout.tsx              # Root localized layout (includes TopNav)
-│   │   │   ├── page.tsx                # Home page
+│   │   │   ├── page.tsx                # Home page — role-aware links
 │   │   │   ├── login/
 │   │   │   │   ├── page.tsx            # Login UI (password + magic link)
-│   │   │   │   └── actions.ts          # signInAction, sendMagicLinkAction
-│   │   │   ├── owner/
+│   │   │   │   └── actions.ts          # signInAction (smart redirect), sendMagicLinkAction
+│   │   │   ├── backoffice/             # Platform owner area (STATIC route — takes priority over [slug])
 │   │   │   │   └── tenants/
 │   │   │   │       ├── page.tsx        # Platform owner: list/create tenants
-│   │   │   │       ├── actions.ts      # createTenantAction
+│   │   │   │       ├── actions.ts      # createTenantAction (validates reserved slugs)
 │   │   │   │       └── [tenantId]/members/
 │   │   │   │           ├── page.tsx    # Owner: manage members of a tenant
 │   │   │   │           └── actions.ts  # assignMemberByUserIdAction
-│   │   │   └── office/
-│   │   │       ├── page.tsx            # Office portal: tenant selector
-│   │   │       ├── actions.ts          # setActiveTenantAction
-│   │   │       └── team/
-│   │   │           ├── page.tsx        # Tenant admin: manage team members
-│   │   │           └── actions.ts      # inviteMemberAction, removeMemberAction, updateMemberRoleAction
+│   │   │   └── [slug]/                 # DYNAMIC route — CPA office identified by slug
+│   │   │       ├── page.tsx            # Public client portal (no auth required)
+│   │   │       └── backoffice/
+│   │   │           ├── page.tsx        # Tenant backoffice dashboard
+│   │   │           └── team/
+│   │   │               ├── page.tsx    # Tenant admin: manage team members
+│   │   │               └── actions.ts  # inviteMemberAction, removeMemberAction, updateMemberRoleAction
 │   │   ├── auth/
 │   │   │   └── callback/route.ts       # Supabase auth callback (magic link, invites)
 │   │   ├── layout.tsx                  # Root layout (suppressHydrationWarning on body)
@@ -74,8 +75,8 @@ cpa/
 │   │   ├── auth/
 │   │   │   ├── audit.ts                # logAuditEvent() — writes to audit_logs
 │   │   │   ├── constants.ts            # ACTIVE_TENANT_COOKIE, tenantRoles, TenantRole
-│   │   │   ├── invitations.ts          # syncPendingInvitations(user) → number
-│   │   │   ├── session.ts              # requireUser, requirePlatformOwner, requireTenantAccess, requireTenantAdmin
+│   │   │   ├── invitations.ts          # syncPendingInvitations(user) → { count, firstSlug }
+│   │   │   ├── session.ts              # requireUser, requirePlatformOwner, requireTenantAccessBySlug, requireTenantAdminBySlug
 │   │   │   └── tenant-context.ts       # setActiveTenant, getActiveTenant, clearActiveTenant (cookie helpers)
 │   │   └── supabase/
 │   │       ├── admin.ts                # Service-role client (bypasses RLS)
@@ -157,7 +158,30 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 1. User visits `/[lang]/login` and signs in (password or magic link).
 2. Magic links and invite links redirect to `/auth/callback/route.ts`.
 3. Callback exchanges the code for a session, then calls `syncPendingInvitations(user)`.
-4. If invitations were resolved, user is redirected to `/office`; otherwise to `/`.
+4. If invitations were resolved, user is redirected to `/{locale}/{slug}/backoffice`; otherwise to `/{locale}`.
+5. Password login (`signInAction`) reads role/memberships after sign-in and redirects:
+   - Platform owner → `/{locale}/backoffice/tenants`
+   - Tenant member → `/{locale}/{slug}/backoffice` (first tenant)
+   - No tenant → `/{locale}` (home)
+
+### Route structure
+
+| URL pattern | Purpose |
+|---|---|
+| `/{locale}` | Home — role-aware links |
+| `/{locale}/login` | Login page |
+| `/{locale}/backoffice/tenants` | Platform owner: manage all tenants |
+| `/{locale}/backoffice/tenants/{tenantId}/members` | Platform owner: manage tenant members |
+| `/{locale}/{slug}` | Public client portal for a CPA office (no auth) |
+| `/{locale}/{slug}/backoffice` | CPA office backoffice dashboard |
+| `/{locale}/{slug}/backoffice/team` | CPA office team management |
+
+Next.js gives static segments (`backoffice`) priority over the dynamic `[slug]` segment, so `/en/backoffice/...` is always the platform-owner area.
+
+### Reserved slugs
+
+The following slugs are blocked from tenant creation (they conflict with static routes):  
+`backoffice`, `login`, `auth`, `api`, `admin`, `en`, `he`
 
 ### Session guards (`src/lib/auth/session.ts`)
 
@@ -165,13 +189,8 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 |---|---|
 | `requireUser(locale)` | `/{locale}/login` |
 | `requirePlatformOwner(locale)` | `/{locale}` |
-| `requireTenantAccess(locale)` | `/{locale}/office?error=tenant_required` or `tenant_access` |
-| `requireTenantAdmin(locale)` | `/{locale}/office?error=forbidden` |
-
-### Tenant context
-
-The active tenant is stored in an HTTP-only cookie named `active_tenant_id` (constant: `ACTIVE_TENANT_COOKIE`).  
-Managed by `setActiveTenant()`, `getActiveTenant()`, `clearActiveTenant()` in `src/lib/auth/tenant-context.ts`.
+| `requireTenantAccessBySlug(locale, slug)` | 404 if slug unknown; `/{locale}?error=tenant_access` if not a member |
+| `requireTenantAdminBySlug(locale, slug)` | `/{locale}/{slug}/backoffice?error=forbidden` |
 
 ### Roles
 
@@ -284,6 +303,8 @@ Required GitHub Secrets: `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, `TEST_SU
 | Lazy env getters (`getPublicSupabaseEnv`) | Calling `process.env` at module evaluation time causes Next.js build failures. Lazy getters defer access until runtime. |
 | Separate test Supabase project | Never run integration/E2E tests against the production database. |
 | E2E only on `main` in CI | E2E tests are slow and require a running server. PRs get unit + integration + build checks which catch the majority of regressions. |
+| Slug-based routing for tenant backoffice (`/[slug]/backoffice`) | Bookmarkable, shareable URLs. No need for a cookie or session-level tenant selector. Each CPA office has its own unique URL. |
+| Static `backoffice` segment takes priority over `[slug]` | Next.js always matches static segments before dynamic ones, so `/en/backoffice` unambiguously routes to the platform-owner area. |
 
 ---
 

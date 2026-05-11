@@ -15,6 +15,38 @@ const otpSchema = z.object({
   email: z.email(),
 });
 
+const getPostLoginDestination = async (locale: string): Promise<string> => {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return `/${locale}/login`;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_platform_owner")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.is_platform_owner) {
+    return `/${locale}/backoffice/tenants`;
+  }
+
+  const { data: memberships } = await supabase
+    .from("tenant_memberships")
+    .select("tenant_id, tenants(slug)")
+    .eq("user_id", user.id)
+    .limit(1);
+
+  type MembershipRow = { tenant_id: string; tenants: { slug: string } | null };
+  const firstSlug = (memberships as MembershipRow[] | null)?.[0]?.tenants?.slug ?? null;
+
+  if (firstSlug) {
+    return `/${locale}/${firstSlug}/backoffice`;
+  }
+
+  return `/${locale}`;
+};
+
 export const signInAction = async (locale: string, formData: FormData) => {
   const parsed = passwordSchema.safeParse({
     email: formData.get("email"),
@@ -34,9 +66,14 @@ export const signInAction = async (locale: string, formData: FormData) => {
   }
 
   const { data: { user } } = await supabase.auth.getUser();
-  await logAuditEvent({ action: "auth.sign_in.succeeded", actorUserId: user?.id, payload: { email: parsed.data.email } });
+  await logAuditEvent({
+    action: "auth.sign_in.succeeded",
+    actorUserId: user?.id,
+    payload: { email: parsed.data.email },
+  });
 
-  redirect(`/${locale}`);
+  const destination = await getPostLoginDestination(locale);
+  redirect(destination);
 };
 
 export const sendMagicLinkAction = async (locale: string, formData: FormData) => {

@@ -14,7 +14,9 @@ const signInAsOwner = async (page: import("@playwright/test").Page) => {
   await page.getByLabel(/email/i).first().fill(OWNER_EMAIL);
   await page.getByLabel(/password/i).fill(OWNER_PASSWORD);
   await page.getByRole("button", { name: /continue/i }).click();
-  await page.waitForURL((url) => url.pathname === "/en", { timeout: 15000 });
+  await page.waitForURL((url) => url.pathname === "/en/backoffice/tenants" || url.pathname === "/en", {
+    timeout: 15000,
+  });
 };
 
 const getAdmin = () =>
@@ -37,7 +39,7 @@ test.describe("Owner tenant management", () => {
 
   test("owner can create a new tenant", async ({ page }) => {
     await signInAsOwner(page);
-    await page.goto("/en/owner/tenants");
+    await page.goto("/en/backoffice/tenants");
 
     await expect(page.getByRole("heading", { name: /tenant management/i })).toBeVisible();
     await page.getByLabel(/tenant name/i).fill(TEST_TENANT_NAME);
@@ -49,25 +51,15 @@ test.describe("Owner tenant management", () => {
 
   test("tenant card shows a manage members link", async ({ page }) => {
     await signInAsOwner(page);
-    await page.goto("/en/owner/tenants");
+    await page.goto("/en/backoffice/tenants");
 
     await expect(page.getByText(TEST_TENANT_NAME)).toBeVisible({ timeout: 10000 });
     const card = page.locator("article").filter({ hasText: TEST_TENANT_NAME });
     await expect(card.getByRole("link", { name: /manage members/i })).toBeVisible();
   });
 
-  test("non-owner cannot access owner tenants page", async ({ page }) => {
-    await page.goto("/en/owner/tenants");
+  test("non-owner cannot access backoffice tenants page", async ({ page }) => {
+    await page.goto("/en/backoffice/tenants");
     await expect(page).toHaveURL(/\/en\/login/);
-  });
-});
-
-test.describe("Office portal", () => {
-  test.skip(skip, "E2E_OWNER_EMAIL and E2E_OWNER_PASSWORD required");
-
-  test("tenant selector is shown on /en/office", async ({ page }) => {
-    await signInAsOwner(page);
-    await page.goto("/en/office");
-    await expect(page.getByRole("heading", { name: /office backoffice/i })).toBeVisible();
   });
 });
