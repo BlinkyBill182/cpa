@@ -14,7 +14,7 @@ const signInAsOwner = async (page: import("@playwright/test").Page) => {
   await page.getByLabel(/email/i).first().fill(OWNER_EMAIL);
   await page.getByLabel(/password/i).fill(OWNER_PASSWORD);
   await page.getByRole("button", { name: /continue/i }).click();
-  await page.waitForURL(/\/en($|\?|\/)/);
+  await page.waitForURL((url) => url.pathname === "/en", { timeout: 15000 });
 };
 
 const getAdmin = () =>
