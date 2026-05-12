@@ -40,10 +40,9 @@ export default async function LocaleLayout({
     <>
       <HtmlDirSync locale={lang} />
       <TopNav
-        locale={lang}
         isOwner={isOwner}
         isLoggedIn={!!user}
-        signOut={signOutAction.bind(null, lang)}
+        signOut={signOutAction}
         labels={dict.nav}
       />
       <main className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-10">{children}</main>

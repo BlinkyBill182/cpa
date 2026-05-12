@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { defaultLocale } from "@/i18n/config";
 import { logAuditEvent } from "@/lib/auth/audit";
 import { syncPendingInvitations } from "@/lib/auth/invitations";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -10,17 +9,16 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const slug = searchParams.get("slug");
-  const locale = searchParams.get("locale") ?? defaultLocale;
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/${defaultLocale}/login?error=auth`);
+    return NextResponse.redirect(`${origin}/login?error=auth`);
   }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.user) {
-    return NextResponse.redirect(`${origin}/${defaultLocale}/login?error=auth`);
+    return NextResponse.redirect(`${origin}/login?error=auth`);
   }
 
   // Always sync pending invitations (handles admin-invite flow for all paths)
@@ -37,7 +35,7 @@ export async function GET(request: Request) {
       .single();
 
     if (!tenant) {
-      return NextResponse.redirect(`${origin}/${locale}?error=tenant_not_found`);
+      return NextResponse.redirect(`${origin}/?error=tenant_not_found`);
     }
 
     // Check if user now has a membership (from invitation sync or pre-existing)
@@ -49,7 +47,7 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (membership) {
-      return NextResponse.redirect(`${origin}/${locale}/${slug}/backoffice`);
+      return NextResponse.redirect(`${origin}/${slug}/backoffice`);
     }
 
     // Platform owner always has access
@@ -60,7 +58,7 @@ export async function GET(request: Request) {
       .single();
 
     if (profile?.is_platform_owner) {
-      return NextResponse.redirect(`${origin}/${locale}/${slug}/backoffice`);
+      return NextResponse.redirect(`${origin}/${slug}/backoffice`);
     }
 
     const email = data.user.email?.toLowerCase() ?? "";
@@ -87,7 +85,7 @@ export async function GET(request: Request) {
         payload: { email, role: approvedRequest.role },
       });
 
-      return NextResponse.redirect(`${origin}/${locale}/${slug}/backoffice`);
+      return NextResponse.redirect(`${origin}/${slug}/backoffice`);
     }
 
     // Still pending — show waiting screen
@@ -100,17 +98,17 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (pendingRequest) {
-      return NextResponse.redirect(`${origin}/${locale}/${slug}/login?status=pending`);
+      return NextResponse.redirect(`${origin}/${slug}/login?status=pending`);
     }
 
-    return NextResponse.redirect(`${origin}/${locale}/${slug}/login`);
+    return NextResponse.redirect(`${origin}/${slug}/login`);
   }
 
   // Generic flow: use sync result to redirect to first accepted tenant or home
   const destination =
     syncResult.count > 0 && syncResult.firstSlug
-      ? `/${defaultLocale}/${syncResult.firstSlug}/backoffice`
-      : `/${defaultLocale}`;
+      ? `/${syncResult.firstSlug}/backoffice`
+      : "/";
 
   return NextResponse.redirect(`${origin}${destination}`);
 }

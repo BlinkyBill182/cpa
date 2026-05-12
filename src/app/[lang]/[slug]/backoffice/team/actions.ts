@@ -41,7 +41,7 @@ export const inviteMemberAction = async (locale: string, slug: string, formData:
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=validation`);
+    redirect(`/${slug}/backoffice/team?error=validation`);
   }
 
   const email = parsed.data.email.toLowerCase();
@@ -58,7 +58,7 @@ export const inviteMemberAction = async (locale: string, slug: string, formData:
       .maybeSingle();
 
     if (existingMembership) {
-      redirect(`/${locale}/${slug}/backoffice/team?error=already_member`);
+      redirect(`/${slug}/backoffice/team?error=already_member`);
     }
   }
 
@@ -72,7 +72,7 @@ export const inviteMemberAction = async (locale: string, slug: string, formData:
   });
 
   if (error) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=invite`);
+    redirect(`/${slug}/backoffice/team?error=invite`);
   }
 
   await logAuditEvent({
@@ -90,7 +90,7 @@ export const removeMemberAction = async (locale: string, slug: string, formData:
   const parsed = removeSchema.safeParse({ userId: formData.get("userId") });
 
   if (!parsed.success || parsed.data.userId === user.id) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=remove`);
+    redirect(`/${slug}/backoffice/team?error=remove`);
   }
 
   const supabase = await createSupabaseServerClient();
@@ -101,7 +101,7 @@ export const removeMemberAction = async (locale: string, slug: string, formData:
     .eq("user_id", parsed.data.userId);
 
   if (error) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=remove`);
+    redirect(`/${slug}/backoffice/team?error=remove`);
   }
 
   await logAuditEvent({
@@ -122,7 +122,7 @@ export const updateMemberRoleAction = async (locale: string, slug: string, formD
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=role`);
+    redirect(`/${slug}/backoffice/team?error=role`);
   }
 
   const supabase = await createSupabaseServerClient();
@@ -133,7 +133,7 @@ export const updateMemberRoleAction = async (locale: string, slug: string, formD
     .eq("user_id", parsed.data.userId);
 
   if (error) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=role`);
+    redirect(`/${slug}/backoffice/team?error=role`);
   }
 
   await logAuditEvent({
@@ -158,7 +158,7 @@ export const approveAccessRequestAction = async (
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=validation`);
+    redirect(`/${slug}/backoffice/team?error=validation`);
   }
 
   const admin = createSupabaseAdminClient();
@@ -172,7 +172,7 @@ export const approveAccessRequestAction = async (
     .single();
 
   if (!request) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=not_found`);
+    redirect(`/${slug}/backoffice/team?error=not_found`);
   }
 
   // If the user already has an account, create membership immediately
@@ -220,7 +220,7 @@ export const rejectAccessRequestAction = async (
   const parsed = rejectRequestSchema.safeParse({ requestId: formData.get("requestId") });
 
   if (!parsed.success) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=validation`);
+    redirect(`/${slug}/backoffice/team?error=validation`);
   }
 
   const admin = createSupabaseAdminClient();
@@ -234,7 +234,7 @@ export const rejectAccessRequestAction = async (
     .single();
 
   if (!request) {
-    redirect(`/${locale}/${slug}/backoffice/team?error=not_found`);
+    redirect(`/${slug}/backoffice/team?error=not_found`);
   }
 
   await admin

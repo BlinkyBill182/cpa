@@ -6,19 +6,19 @@ import type { TenantRole } from "@/lib/auth/constants";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const requireUser = async (locale: string) => {
+export const requireUser = async (_locale?: string) => {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
-    redirect(`/${locale}/login`);
+    redirect("/login");
   }
 
   return data.user;
 };
 
-export const requirePlatformOwner = async (locale: string) => {
-  const user = await requireUser(locale);
+export const requirePlatformOwner = async (_locale?: string) => {
+  const user = await requireUser();
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -28,18 +28,18 @@ export const requirePlatformOwner = async (locale: string) => {
     .single();
 
   if (error || !data?.is_platform_owner) {
-    redirect(`/${locale}`);
+    redirect("/");
   }
 
   return user;
 };
 
-export const requireTenantAccessBySlug = async (locale: string, slug: string) => {
+export const requireTenantAccessBySlug = async (_locale: string, slug: string) => {
   const supabase = await createSupabaseServerClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
   if (authError || !authData.user) {
-    redirect(`/${locale}/login`);
+    redirect("/login");
   }
 
   const user = authData.user;
@@ -73,17 +73,17 @@ export const requireTenantAccessBySlug = async (locale: string, slug: string) =>
     .single();
 
   if (!membership) {
-    redirect(`/${locale}?error=tenant_access`);
+    redirect(`/?error=tenant_access`);
   }
 
   return { user, tenant, role: membership.role as TenantRole };
 };
 
-export const requireTenantAdminBySlug = async (locale: string, slug: string) => {
-  const access = await requireTenantAccessBySlug(locale, slug);
+export const requireTenantAdminBySlug = async (_locale: string, slug: string) => {
+  const access = await requireTenantAccessBySlug(_locale, slug);
 
   if (access.role !== "tenant_admin") {
-    redirect(`/${locale}/${slug}/backoffice?error=forbidden`);
+    redirect(`/${slug}/backoffice?error=forbidden`);
   }
 
   return access;

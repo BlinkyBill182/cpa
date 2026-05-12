@@ -81,13 +81,13 @@ export default async function BackofficeTenantsPage({ params, searchParams }: Ba
             </div>
             <div className="flex gap-2">
               <a
-                href={`/${lang}/backoffice/tenants/${tenant.id}/members`}
+                href={`/backoffice/tenants/${tenant.id}/members`}
                 className="rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
               >
                 {dict.ownerTenants.manageMembers}
               </a>
               <a
-                href={`/${lang}/${tenant.slug}/backoffice`}
+                href={`/${tenant.slug}/backoffice`}
                 className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
               >
                 {dict.ownerTenants.openBackoffice}

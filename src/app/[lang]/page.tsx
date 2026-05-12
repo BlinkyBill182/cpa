@@ -22,7 +22,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
         <h1 className="text-3xl font-semibold text-blue-900">{dict.home.title}</h1>
         <p className="text-slate-700">{dict.home.description}</p>
         <Link
-          href={`/${lang}/login`}
+          href="/login"
           className="w-fit rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
         >
           {dict.nav.login}
@@ -64,7 +64,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
       {isOwner ? (
         <div className="flex flex-col gap-3">
           <Link
-            href={`/${lang}/backoffice/tenants`}
+            href="/backoffice/tenants"
             className="w-fit rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
           >
             {dict.home.ownerAction}
@@ -77,7 +77,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           {offices.map((m) => (
             <Link
               key={m.tenants!.slug}
-              href={`/${lang}/${m.tenants!.slug}/backoffice`}
+              href={`/${m.tenants!.slug}/backoffice`}
               className="flex w-fit items-center gap-2 rounded-md border border-blue-200 px-5 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
             >
               {m.tenants!.name}

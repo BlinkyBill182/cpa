@@ -26,7 +26,7 @@ export const assignMemberByUserIdAction = async (
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/backoffice/tenants/${tenantId}/members?error=validation`);
+    redirect(`/backoffice/tenants/${tenantId}/members?error=validation`);
   }
 
   const admin = createSupabaseAdminClient();
@@ -38,7 +38,7 @@ export const assignMemberByUserIdAction = async (
     .maybeSingle();
 
   if (existingMembership && existingMembership.tenant_id !== tenantId) {
-    redirect(`/${locale}/backoffice/tenants/${tenantId}/members?error=already_member`);
+    redirect(`/backoffice/tenants/${tenantId}/members?error=already_member`);
   }
 
   const { error } = await admin.from("tenant_memberships").upsert(
@@ -51,7 +51,7 @@ export const assignMemberByUserIdAction = async (
   );
 
   if (error) {
-    redirect(`/${locale}/backoffice/tenants/${tenantId}/members?error=assign`);
+    redirect(`/backoffice/tenants/${tenantId}/members?error=assign`);
   }
 
   await logAuditEvent({

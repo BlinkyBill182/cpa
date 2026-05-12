@@ -30,11 +30,11 @@ export const createTenantAction = async (locale: string, formData: FormData) => 
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/backoffice/tenants?error=validation`);
+    redirect("/backoffice/tenants?error=validation");
   }
 
   if (RESERVED_SLUGS.has(parsed.data.slug)) {
-    redirect(`/${locale}/backoffice/tenants?error=reserved_slug`);
+    redirect("/backoffice/tenants?error=reserved_slug");
   }
 
   const { error } = await supabase.from("tenants").insert({
@@ -44,7 +44,7 @@ export const createTenantAction = async (locale: string, formData: FormData) => 
   });
 
   if (error) {
-    redirect(`/${locale}/backoffice/tenants?error=insert`);
+    redirect("/backoffice/tenants?error=insert");
   }
 
   await logAuditEvent({

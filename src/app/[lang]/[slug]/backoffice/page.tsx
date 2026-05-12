@@ -24,7 +24,7 @@ export default async function TenantBackofficePage({ params }: TenantBackofficeP
 
       <nav className="flex gap-3">
         <Link
-          href={`/${lang}/${slug}/backoffice/team`}
+          href={`/${slug}/backoffice/team`}
           className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
         >
           {dict.tenantBackoffice.teamLink}

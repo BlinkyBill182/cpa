@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { logAuditEvent } from "@/lib/auth/audit";
-import { tenantRoles } from "@/lib/auth/constants";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -21,14 +20,14 @@ const getTenantBySlug = async (slug: string) => {
   return data;
 };
 
-export const signInForTenantAction = async (locale: string, slug: string, formData: FormData) => {
+export const signInForTenantAction = async (_locale: string, slug: string, formData: FormData) => {
   const parsed = passwordSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/${slug}/login?error=validation`);
+    redirect(`/${slug}/login?error=validation`);
   }
 
   const supabase = await createSupabaseServerClient();
@@ -36,7 +35,7 @@ export const signInForTenantAction = async (locale: string, slug: string, formDa
 
   if (error) {
     await logAuditEvent({ action: "auth.sign_in.failed", payload: { email: parsed.data.email } });
-    redirect(`/${locale}/${slug}/login?error=auth`);
+    redirect(`/${slug}/login?error=auth`);
   }
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -46,11 +45,11 @@ export const signInForTenantAction = async (locale: string, slug: string, formDa
     payload: { email: parsed.data.email },
   });
 
-  if (!user) redirect(`/${locale}/${slug}/login?error=auth`);
+  if (!user) redirect(`/${slug}/login?error=auth`);
 
   const admin = createSupabaseAdminClient();
   const tenant = await getTenantBySlug(slug);
-  if (!tenant) redirect(`/${locale}/${slug}/login?error=auth`);
+  if (!tenant) redirect(`/${slug}/login?error=auth`);
 
   const { data: membership } = await admin
     .from("tenant_memberships")
@@ -60,10 +59,9 @@ export const signInForTenantAction = async (locale: string, slug: string, formDa
     .maybeSingle();
 
   if (membership) {
-    redirect(`/${locale}/${slug}/backoffice`);
+    redirect(`/${slug}/backoffice`);
   }
 
-  // Check for platform owner
   const { data: profile } = await admin
     .from("profiles")
     .select("is_platform_owner")
@@ -71,7 +69,7 @@ export const signInForTenantAction = async (locale: string, slug: string, formDa
     .single();
 
   if (profile?.is_platform_owner) {
-    redirect(`/${locale}/${slug}/backoffice`);
+    redirect(`/${slug}/backoffice`);
   }
 
   const email = parsed.data.email.toLowerCase();
@@ -85,27 +83,27 @@ export const signInForTenantAction = async (locale: string, slug: string, formDa
     .maybeSingle();
 
   if (request?.status === "pending" || request?.status === "approved") {
-    redirect(`/${locale}/${slug}/login?status=pending`);
+    redirect(`/${slug}/login?status=pending`);
   }
 
-  redirect(`/${locale}/${slug}/login?status=no_access`);
+  redirect(`/${slug}/login?status=no_access`);
 };
 
 export const sendMagicLinkForTenantAction = async (
-  locale: string,
+  _locale: string,
   slug: string,
   formData: FormData,
 ) => {
   const parsed = emailSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) {
-    redirect(`/${locale}/${slug}/login?error=validation`);
+    redirect(`/${slug}/login?error=validation`);
   }
 
   const email = parsed.data.email.toLowerCase();
   const admin = createSupabaseAdminClient();
 
   const tenant = await getTenantBySlug(slug);
-  if (!tenant) redirect(`/${locale}/${slug}/login?error=auth`);
+  if (!tenant) redirect(`/${slug}/login?error=auth`);
 
   // Block duplicate pending requests
   const { data: existingRequest } = await admin
@@ -117,7 +115,7 @@ export const sendMagicLinkForTenantAction = async (
     .maybeSingle();
 
   if (existingRequest) {
-    redirect(`/${locale}/${slug}/login?status=already_requested`);
+    redirect(`/${slug}/login?status=already_requested`);
   }
 
   // Check if user exists and already has membership (skip creating a request)
@@ -132,7 +130,6 @@ export const sendMagicLinkForTenantAction = async (
       .eq("user_id", existingUser.id)
       .maybeSingle();
 
-    // Also check platform owner
     const { data: profile } = await admin
       .from("profiles")
       .select("is_platform_owner")
@@ -140,15 +137,15 @@ export const sendMagicLinkForTenantAction = async (
       .single();
 
     if (membership || profile?.is_platform_owner) {
-      // Already a member — just send a regular sign-in link
+      // Already a member — send a regular sign-in link
       const supabase = await createSupabaseServerClient();
       await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback?slug=${slug}&locale=${locale}`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback?slug=${slug}`,
         },
       });
-      redirect(`/${locale}/${slug}/login?otp=sent`);
+      redirect(`/${slug}/login?otp=sent`);
     }
   }
 
@@ -164,18 +161,18 @@ export const sendMagicLinkForTenantAction = async (
     payload: { email },
   });
 
-  // Send magic link so the user authenticates and lands on the waiting page
+  // Send magic link — callback will check membership/request status
   const supabase = await createSupabaseServerClient();
   const { error: otpError } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback?slug=${slug}&locale=${locale}`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback?slug=${slug}`,
     },
   });
 
   if (otpError) {
-    redirect(`/${locale}/${slug}/login?error=otp`);
+    redirect(`/${slug}/login?error=otp`);
   }
 
-  redirect(`/${locale}/${slug}/login?status=requested`);
+  redirect(`/${slug}/login?status=requested`);
 };

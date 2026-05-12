@@ -16,23 +16,24 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const currentLocale =
-    locales.find((locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) ??
-    defaultLocale;
+  // Strip locale prefix from public-facing URL (301 → browser never sees /he/ or /en/)
+  const hasLocalePrefix = locales.some(
+    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
+  );
 
-  const pathnameHasLocale = locales.some((locale) => {
-    return pathname === `/${locale}` || pathname.startsWith(`/${locale}/`);
-  });
-
-  if (!pathnameHasLocale) {
+  if (hasLocalePrefix) {
+    const stripped = pathname.replace(/^\/(en|he)/, "") || "/";
     const nextUrl = request.nextUrl.clone();
-    nextUrl.pathname = `/${defaultLocale}${pathname}`;
+    nextUrl.pathname = stripped;
     return NextResponse.redirect(nextUrl);
   }
 
+  // Rewrite every clean path to /he/... so [lang] route segment always gets "he"
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = pathname === "/" ? `/${defaultLocale}` : `/${defaultLocale}${pathname}`;
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-locale", currentLocale);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  requestHeaders.set("x-locale", defaultLocale);
+  return NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } });
 }
 
 export const config = {

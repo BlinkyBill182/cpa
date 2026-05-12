@@ -15,11 +15,11 @@ const otpSchema = z.object({
   email: z.email(),
 });
 
-const getPostLoginDestination = async (locale: string): Promise<string> => {
+const getPostLoginDestination = async (): Promise<string> => {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return `/${locale}/login`;
+  if (!user) return "/login";
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -28,7 +28,7 @@ const getPostLoginDestination = async (locale: string): Promise<string> => {
     .single();
 
   if (profile?.is_platform_owner) {
-    return `/${locale}/backoffice/tenants`;
+    return "/backoffice/tenants";
   }
 
   const { data: memberships } = await supabase
@@ -41,20 +41,20 @@ const getPostLoginDestination = async (locale: string): Promise<string> => {
   const firstSlug = (memberships as MembershipRow[] | null)?.[0]?.tenants?.slug ?? null;
 
   if (firstSlug) {
-    return `/${locale}/${firstSlug}/backoffice`;
+    return `/${firstSlug}/backoffice`;
   }
 
-  return `/${locale}`;
+  return "/";
 };
 
-export const signInAction = async (locale: string, formData: FormData) => {
+export const signInAction = async (_locale: string, formData: FormData) => {
   const parsed = passwordSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
 
   if (!parsed.success) {
-    redirect(`/${locale}/login?error=validation`);
+    redirect("/login?error=validation");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -62,7 +62,7 @@ export const signInAction = async (locale: string, formData: FormData) => {
 
   if (error) {
     await logAuditEvent({ action: "auth.sign_in.failed", payload: { email: parsed.data.email } });
-    redirect(`/${locale}/login?error=auth`);
+    redirect("/login?error=auth");
   }
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -72,23 +72,23 @@ export const signInAction = async (locale: string, formData: FormData) => {
     payload: { email: parsed.data.email },
   });
 
-  const destination = await getPostLoginDestination(locale);
+  const destination = await getPostLoginDestination();
   redirect(destination);
 };
 
-export const signOutAction = async (locale: string) => {
+export const signOutAction = async () => {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   await supabase.auth.signOut();
   await logAuditEvent({ action: "auth.sign_out", actorUserId: user?.id });
-  redirect(`/${locale}/login`);
+  redirect("/login");
 };
 
-export const sendMagicLinkAction = async (locale: string, formData: FormData) => {
+export const sendMagicLinkAction = async (_locale: string, formData: FormData) => {
   const parsed = otpSchema.safeParse({ email: formData.get("email") });
 
   if (!parsed.success) {
-    redirect(`/${locale}/login?error=validation`);
+    redirect("/login?error=validation");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -100,8 +100,8 @@ export const sendMagicLinkAction = async (locale: string, formData: FormData) =>
   });
 
   if (error) {
-    redirect(`/${locale}/login?error=otp`);
+    redirect("/login?error=otp");
   }
 
-  redirect(`/${locale}/login?otp=sent`);
+  redirect("/login?otp=sent");
 };
