@@ -50,7 +50,21 @@
     "updateRoleButton": "עדכן",
     "removeButton": "הסר",
     "invitationsHeading": "הזמנות ממתינות",
-    "emptyInvitations": "אין הזמנות ממתינות."
+    "emptyInvitations": "אין הזמנות ממתינות.",
+    "accessRequestsHeading": "בקשות גישה",
+    "emptyAccessRequests": "אין בקשות גישה ממתינות.",
+    "approveButton": "אשר",
+    "rejectButton": "דחה",
+    "requestedAt": "בוקש בתאריך"
+  },
+  "officeLogin": {
+    "signInTo": "כניסה ל",
+    "description": "השתמשו בפרטי הגישה שלכם או בקשו גישה למשרד.",
+    "statusRequested": "הבקשה נשלחה — מנהל המשרד יבחן אותה בקרוב.",
+    "statusPending": "בקשת הגישה שלכם ממתינה לאישור.",
+    "statusAlreadyRequested": "כבר קיימת בקשת גישה פתוחה שלכם למשרד זה.",
+    "statusRejected": "בקשת הגישה לא אושרה. פנו למנהל המשרד.",
+    "statusNoAccess": "אין לכם גישה למשרד זה."
   },
   "tenantBackoffice": {
     "title": "בק אופיס",

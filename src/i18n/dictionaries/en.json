@@ -50,7 +50,21 @@
     "updateRoleButton": "Update",
     "removeButton": "Remove",
     "invitationsHeading": "Pending invitations",
-    "emptyInvitations": "No pending invitations."
+    "emptyInvitations": "No pending invitations.",
+    "accessRequestsHeading": "Access Requests",
+    "emptyAccessRequests": "No pending access requests.",
+    "approveButton": "Approve",
+    "rejectButton": "Reject",
+    "requestedAt": "Requested"
+  },
+  "officeLogin": {
+    "signInTo": "Sign in to",
+    "description": "Use your credentials or request access to this office.",
+    "statusRequested": "Access requested — the office admin will review your request.",
+    "statusPending": "Your access request is pending approval.",
+    "statusAlreadyRequested": "You already have a pending request for this office.",
+    "statusRejected": "Your access request was not approved. Contact the office admin.",
+    "statusNoAccess": "You don't have access to this office."
   },
   "tenantBackoffice": {
     "title": "Backoffice",

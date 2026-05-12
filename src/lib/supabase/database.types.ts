@@ -127,6 +127,38 @@ export type Database = {
           created_at?: string;
         };
       };
+      tenant_access_requests: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          email: string;
+          status: "pending" | "approved" | "rejected";
+          role: "tenant_admin" | "manager" | "staff" | "reviewer" | null;
+          requested_at: string;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          email: string;
+          status?: "pending" | "approved" | "rejected";
+          role?: "tenant_admin" | "manager" | "staff" | "reviewer" | null;
+          requested_at?: string;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          email?: string;
+          status?: "pending" | "approved" | "rejected";
+          role?: "tenant_admin" | "manager" | "staff" | "reviewer" | null;
+          requested_at?: string;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+        };
+      };
       tenant_invitations: {
         Row: {
           id: string;

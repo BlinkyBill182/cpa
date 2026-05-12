@@ -24,6 +24,15 @@ const updateRoleSchema = z.object({
   role: z.enum(tenantRoles),
 });
 
+const approveRequestSchema = z.object({
+  requestId: z.uuid(),
+  role: z.enum(tenantRoles),
+});
+
+const rejectRequestSchema = z.object({
+  requestId: z.uuid(),
+});
+
 export const inviteMemberAction = async (locale: string, slug: string, formData: FormData) => {
   const { user, tenant } = await requireTenantAdminBySlug(locale, slug);
   const parsed = inviteSchema.safeParse({
@@ -132,6 +141,116 @@ export const updateMemberRoleAction = async (locale: string, slug: string, formD
     actorUserId: user.id,
     tenantId: tenant.id,
     payload: { targetUserId: parsed.data.userId, role: parsed.data.role },
+  });
+
+  revalidatePath(`/${locale}/${slug}/backoffice/team`);
+};
+
+export const approveAccessRequestAction = async (
+  locale: string,
+  slug: string,
+  formData: FormData,
+) => {
+  const { user, tenant } = await requireTenantAdminBySlug(locale, slug);
+  const parsed = approveRequestSchema.safeParse({
+    requestId: formData.get("requestId"),
+    role: formData.get("role"),
+  });
+
+  if (!parsed.success) {
+    redirect(`/${locale}/${slug}/backoffice/team?error=validation`);
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  const { data: request } = await admin
+    .from("tenant_access_requests")
+    .select("id, email, tenant_id")
+    .eq("id", parsed.data.requestId)
+    .eq("tenant_id", tenant.id)
+    .eq("status", "pending")
+    .single();
+
+  if (!request) {
+    redirect(`/${locale}/${slug}/backoffice/team?error=not_found`);
+  }
+
+  // If the user already has an account, create membership immediately
+  const { data: userList } = await admin.auth.admin.listUsers();
+  const existingUser = userList?.users.find(
+    (u) => u.email?.toLowerCase() === request.email.toLowerCase(),
+  );
+
+  if (existingUser) {
+    await admin
+      .from("tenant_memberships")
+      .upsert(
+        { tenant_id: tenant.id, user_id: existingUser.id, role: parsed.data.role },
+        { onConflict: "tenant_id,user_id" },
+      );
+  }
+
+  // Store role on the request — used by the callback if user hasn't clicked the magic link yet
+  await admin
+    .from("tenant_access_requests")
+    .update({
+      status: "approved",
+      role: parsed.data.role,
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", request.id);
+
+  await logAuditEvent({
+    action: "tenant.access_request.approved",
+    actorUserId: user.id,
+    tenantId: tenant.id,
+    payload: { requestId: request.id, email: request.email, role: parsed.data.role },
+  });
+
+  revalidatePath(`/${locale}/${slug}/backoffice/team`);
+};
+
+export const rejectAccessRequestAction = async (
+  locale: string,
+  slug: string,
+  formData: FormData,
+) => {
+  const { user, tenant } = await requireTenantAdminBySlug(locale, slug);
+  const parsed = rejectRequestSchema.safeParse({ requestId: formData.get("requestId") });
+
+  if (!parsed.success) {
+    redirect(`/${locale}/${slug}/backoffice/team?error=validation`);
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  const { data: request } = await admin
+    .from("tenant_access_requests")
+    .select("id, email")
+    .eq("id", parsed.data.requestId)
+    .eq("tenant_id", tenant.id)
+    .eq("status", "pending")
+    .single();
+
+  if (!request) {
+    redirect(`/${locale}/${slug}/backoffice/team?error=not_found`);
+  }
+
+  await admin
+    .from("tenant_access_requests")
+    .update({
+      status: "rejected",
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", request.id);
+
+  await logAuditEvent({
+    action: "tenant.access_request.rejected",
+    actorUserId: user.id,
+    tenantId: tenant.id,
+    payload: { requestId: request.id, email: request.email },
   });
 
   revalidatePath(`/${locale}/${slug}/backoffice/team`);

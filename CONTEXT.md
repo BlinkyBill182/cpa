@@ -89,7 +89,8 @@ cpa/
 │   └── migrations/
 │       ├── 0001_multi_tenant_foundation.sql
 │       ├── 0002_tenant_member_invites.sql
-│       └── 0003_auto_profile_on_signup.sql
+│       ├── 0003_auto_profile_on_signup.sql
+│       └── 0004_tenant_access_requests.sql
 ├── tests/
 │   ├── setup.ts                        # Global mocks: server-only, next/headers, next/navigation, next/cache
 │   ├── helpers/
@@ -129,6 +130,7 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 | `tenants` | Each CPA office. Has `name`, `slug` (unique), `created_by`. |
 | `tenant_memberships` | Junction: `user_id` ↔ `tenant_id` with a `role`. Unique per pair. |
 | `tenant_invitations` | Pending email invites. `status`: `pending` → `accepted`. Resolved in `/auth/callback`. |
+| `tenant_access_requests` | Self-service access requests from office login page. `status`: `pending` → `approved`/`rejected`. `role` is set at approval time. |
 | `office_clients` | CPA office's end-clients. Scoped to `tenant_id`. |
 | `seasonal_income_records` | Per-client annual income data. Scoped to `tenant_id`. |
 | `workflow_runs` | Reserved for future automation/CRON tracking. |
@@ -140,6 +142,7 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 - **`tenants`**: Platform owner sees all. Members see only tenants they belong to.
 - **`tenant_memberships`**: Members see their own memberships. `tenant_admin` manages their tenant. Platform owner manages all.
 - **`tenant_invitations`**: `tenant_admin` creates invites for their tenant. Platform owner sees all.
+- **`tenant_access_requests`**: Inserted via admin client (no INSERT policy needed). `tenant_admin` and platform owner can SELECT/UPDATE. Pending requests shown in team management page.
 - **`office_clients`, `seasonal_income_records`**: Tenant members only see rows for their own tenant.
 - **`audit_logs`**: Insert-only for authenticated users; no update/delete.
 
@@ -155,8 +158,20 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 
 ### Auth flow
 
-1. User visits `/[lang]/login` and signs in (password or magic link).
+1. User visits `/[lang]/login` (platform) or `/[lang]/[slug]/login` (office-specific) and signs in.
 2. Magic links and invite links redirect to `/auth/callback/route.ts`.
+
+#### Office-specific access request flow
+
+1. User visits `/{locale}/{slug}/login`, enters email, clicks "Send magic link".
+2. Server creates a `tenant_access_requests` record (status=pending) and sends a magic link with `?slug=&locale=` encoded in the callback URL.
+3. Admin reviews pending requests in `/{slug}/backoffice/team`, picks a role, and approves.
+   - If the user already has an account: membership is created immediately.
+   - If not yet: the role is stored on the request record.
+4. User clicks the magic link → `/auth/callback` runs:
+   - If membership exists → redirected to backoffice.
+   - If `approved` request found → membership created on the spot → redirected to backoffice.
+   - If still `pending` → redirected to `/{slug}/login?status=pending`.
 3. Callback exchanges the code for a session, then calls `syncPendingInvitations(user)`.
 4. If invitations were resolved, user is redirected to `/{locale}/{slug}/backoffice`; otherwise to `/{locale}`.
 5. Password login (`signInAction`) reads role/memberships after sign-in and redirects:
@@ -173,6 +188,7 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 | `/{locale}/backoffice/tenants` | Platform owner: manage all tenants |
 | `/{locale}/backoffice/tenants/{tenantId}/members` | Platform owner: manage tenant members |
 | `/{locale}/{slug}` | Public client portal for a CPA office (no auth) |
+| `/{locale}/{slug}/login` | Office-specific login + self-service access request |
 | `/{locale}/{slug}/backoffice` | CPA office backoffice dashboard |
 | `/{locale}/{slug}/backoffice/team` | CPA office team management |
 

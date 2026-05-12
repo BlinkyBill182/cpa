@@ -1,9 +1,16 @@
 import { getDictionary } from "@/i18n/get-dictionary";
 import { tenantRoles } from "@/lib/auth/constants";
 import { requireTenantAdminBySlug } from "@/lib/auth/session";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-import { inviteMemberAction, removeMemberAction, updateMemberRoleAction } from "./actions";
+import {
+  approveAccessRequestAction,
+  inviteMemberAction,
+  rejectAccessRequestAction,
+  removeMemberAction,
+  updateMemberRoleAction,
+} from "./actions";
 
 type TenantTeamPageProps = {
   params: Promise<{ lang: string; slug: string }>;
@@ -17,18 +24,27 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
   const { user, tenant } = await requireTenantAdminBySlug(lang, slug);
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: memberships }, { data: invitations }] = await Promise.all([
-    supabase
-      .from("tenant_memberships")
-      .select("user_id, role, created_at")
-      .eq("tenant_id", tenant.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("tenant_invitations")
-      .select("id, invited_email, role, status, invited_at")
-      .eq("tenant_id", tenant.id)
-      .order("invited_at", { ascending: false }),
-  ]);
+  const admin = createSupabaseAdminClient();
+
+  const [{ data: memberships }, { data: invitations }, { data: accessRequests }] =
+    await Promise.all([
+      supabase
+        .from("tenant_memberships")
+        .select("user_id, role, created_at")
+        .eq("tenant_id", tenant.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("tenant_invitations")
+        .select("id, invited_email, role, status, invited_at")
+        .eq("tenant_id", tenant.id)
+        .order("invited_at", { ascending: false }),
+      admin
+        .from("tenant_access_requests")
+        .select("id, email, requested_at")
+        .eq("tenant_id", tenant.id)
+        .eq("status", "pending")
+        .order("requested_at", { ascending: false }),
+    ]);
 
   return (
     <section className="flex w-full flex-col gap-8">
@@ -140,6 +156,60 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
             <p className="text-sm text-slate-600">
               {invitation.role} — {invitation.status}
             </p>
+          </article>
+        ))}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold">{dict.ownerMembers.accessRequestsHeading}</h2>
+        {(accessRequests ?? []).length === 0 ? (
+          <p className="text-slate-700">{dict.ownerMembers.emptyAccessRequests}</p>
+        ) : null}
+        {(accessRequests ?? []).map((req) => (
+          <article
+            key={req.id}
+            className="rounded-md border border-amber-100 bg-amber-50 px-4 py-3"
+          >
+            <div className="mb-3">
+              <p className="font-medium">{req.email}</p>
+              <p className="text-sm text-slate-600">
+                {dict.ownerMembers.requestedAt}:{" "}
+                {new Date(req.requested_at).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <form
+                action={approveAccessRequestAction.bind(null, lang, slug)}
+                className="flex items-end gap-2"
+              >
+                <input type="hidden" name="requestId" value={req.id} />
+                <label className="flex flex-col gap-1 text-sm">
+                  <span>{dict.ownerMembers.role}</span>
+                  <select name="role" className="rounded-md border border-blue-200 px-2 py-1">
+                    {tenantRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="submit"
+                  className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  {dict.ownerMembers.approveButton}
+                </button>
+              </form>
+              <form action={rejectAccessRequestAction.bind(null, lang, slug)}>
+                <input type="hidden" name="requestId" value={req.id} />
+                <button
+                  type="submit"
+                  className="rounded-md border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50"
+                >
+                  {dict.ownerMembers.rejectButton}
+                </button>
+              </form>
+            </div>
           </article>
         ))}
       </section>
