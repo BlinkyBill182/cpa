@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { BackButton } from "@/components/layout/back-button";
 import { DarkModeToggle } from "@/components/layout/dark-mode-toggle";
 import { HtmlDirSync } from "@/components/layout/html-dir-sync";
 import { TopNav } from "@/components/layout/top-nav";
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
         signOut={signOutAction}
         labels={dict.nav}
         darkModeToggle={<DarkModeToggle />}
+        backButton={<BackButton label={dict.nav.back} />}
       />
       <main className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-10">{children}</main>
     </>

@@ -6,7 +6,8 @@
     "home": "Home",
     "login": "Login",
     "logout": "Logout",
-    "backoffice": "Platform Backoffice"
+    "backoffice": "Platform Backoffice",
+    "back": "← Back"
   },
   "home": {
     "title": "CPA Platform",
