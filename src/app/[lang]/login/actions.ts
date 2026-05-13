@@ -33,15 +33,18 @@ const getPostLoginDestination = async (): Promise<string> => {
 
   const { data: memberships } = await supabase
     .from("tenant_memberships")
-    .select("tenant_id, tenants(slug)")
+    .select("tenant_id, role, tenants(slug)")
     .eq("user_id", user.id)
     .limit(1);
 
-  type MembershipRow = { tenant_id: string; tenants: { slug: string } | null };
-  const firstSlug = (memberships as MembershipRow[] | null)?.[0]?.tenants?.slug ?? null;
+  type MembershipRow = { tenant_id: string; role: string; tenants: { slug: string } | null };
+  const first = (memberships as MembershipRow[] | null)?.[0] ?? null;
 
-  if (firstSlug) {
-    return `/${firstSlug}/backoffice`;
+  if (first?.tenants?.slug) {
+    const { slug } = first.tenants;
+    return first.role === "tenant_admin"
+      ? `/${slug}/backoffice`
+      : `/${slug}/backoffice/clients`;
   }
 
   return "/";
