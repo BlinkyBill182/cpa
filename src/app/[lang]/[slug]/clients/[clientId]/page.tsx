@@ -33,8 +33,6 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   if (!client) notFound();
 
   const enabledKeys = new Set((configs ?? []).map((c) => c.action_key));
-
-  // Available = registered for this office's slug AND enabled by platform owner
   const availableActions = getActionsForTenant(slug).filter((a) =>
     enabledKeys.has(a.key),
   );
@@ -42,7 +40,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <a href={`/${slug}/backoffice/clients`} className="text-sm text-blue-600 hover:underline">
+        <a href={`/${slug}/clients`} className="text-sm text-blue-600 hover:underline">
           ← {dict.clients.title}
         </a>
         <h1 className="text-3xl font-semibold text-blue-900">{client.name}</h1>
@@ -65,7 +63,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
             return (
               <li key={action.key}>
                 <a
-                  href={`/${slug}/backoffice/clients/${clientId}/actions/${action.key}`}
+                  href={`/${slug}/clients/${clientId}/actions/${action.key}`}
                   className="flex h-full flex-col gap-3 rounded-xl border border-blue-100 p-5 shadow-sm transition-shadow hover:shadow-md hover:border-blue-300"
                 >
                   <span className="text-4xl leading-none">{action.icon}</span>

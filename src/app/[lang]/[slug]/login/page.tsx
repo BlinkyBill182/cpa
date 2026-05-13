@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { getDictionary } from "@/i18n/get-dictionary";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { sendMagicLinkForTenantAction, signInForTenantAction } from "./actions";
@@ -17,8 +16,9 @@ export default async function OfficeLoginPage({ params, searchParams }: OfficeLo
   const { error, otp, status } = await searchParams;
   const dict = await getDictionary(lang);
 
-  const admin = createSupabaseAdminClient();
-  const { data: tenant } = await admin
+  const supabase = await createSupabaseServerClient();
+
+  const { data: tenant } = await supabase
     .from("tenants")
     .select("id, name")
     .eq("slug", slug)
@@ -26,25 +26,32 @@ export default async function OfficeLoginPage({ params, searchParams }: OfficeLo
 
   if (!tenant) notFound();
 
-  // Redirect already-authenticated members straight to their backoffice
-  const supabase = await createSupabaseServerClient();
+  // Redirect already-authenticated members straight to their destination
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    const { data: membership } = await admin
-      .from("tenant_memberships")
-      .select("user_id")
-      .eq("tenant_id", tenant.id)
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const [{ data: membership }, { data: profile }] = await Promise.all([
+      supabase
+        .from("tenant_memberships")
+        .select("role")
+        .eq("tenant_id", tenant.id)
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("is_platform_owner")
+        .eq("id", user.id)
+        .single(),
+    ]);
 
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("is_platform_owner")
-      .eq("id", user.id)
-      .single();
-
-    if (membership || profile?.is_platform_owner) {
-      redirect(`/${lang}/${slug}/backoffice`);
+    if (profile?.is_platform_owner) {
+      redirect(`/${slug}/backoffice`);
+    }
+    if (membership) {
+      redirect(
+        membership.role === "tenant_admin"
+          ? `/${slug}/backoffice`
+          : `/${slug}/clients`,
+      );
     }
   }
 

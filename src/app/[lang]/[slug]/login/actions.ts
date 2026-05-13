@@ -11,13 +11,13 @@ const emailSchema = z.object({ email: z.email() });
 
 const passwordSchema = z.object({
   email: z.email(),
-  password: z.string().min(8),
+  password: z.string().min(6),
 });
 
-const getTenantBySlug = async (slug: string) => {
-  const admin = createSupabaseAdminClient();
-  const { data } = await admin.from("tenants").select("id, name, slug").eq("slug", slug).single();
-  return data;
+const getTenantIdBySlug = async (slug: string) => {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.from("tenants").select("id").eq("slug", slug).single();
+  return data?.id ?? null;
 };
 
 export const signInForTenantAction = async (_locale: string, slug: string, formData: FormData) => {
@@ -47,22 +47,30 @@ export const signInForTenantAction = async (_locale: string, slug: string, formD
 
   if (!user) redirect(`/${slug}/login?error=auth`);
 
-  const admin = createSupabaseAdminClient();
-  const tenant = await getTenantBySlug(slug);
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("slug", slug)
+    .single();
+
   if (!tenant) redirect(`/${slug}/login?error=auth`);
 
-  const { data: membership } = await admin
+  const { data: membership } = await supabase
     .from("tenant_memberships")
-    .select("user_id")
+    .select("role")
     .eq("tenant_id", tenant.id)
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (membership) {
-    redirect(`/${slug}/backoffice`);
+    redirect(
+      membership.role === "tenant_admin"
+        ? `/${slug}/backoffice`
+        : `/${slug}/clients`,
+    );
   }
 
-  const { data: profile } = await admin
+  const { data: profile } = await supabase
     .from("profiles")
     .select("is_platform_owner")
     .eq("id", user.id)
@@ -73,7 +81,7 @@ export const signInForTenantAction = async (_locale: string, slug: string, formD
   }
 
   const email = parsed.data.email.toLowerCase();
-  const { data: request } = await admin
+  const { data: request } = await supabase
     .from("tenant_access_requests")
     .select("status")
     .eq("tenant_id", tenant.id)
@@ -102,14 +110,14 @@ export const sendMagicLinkForTenantAction = async (
   const email = parsed.data.email.toLowerCase();
   const admin = createSupabaseAdminClient();
 
-  const tenant = await getTenantBySlug(slug);
-  if (!tenant) redirect(`/${slug}/login?error=auth`);
+  const tenantId = await getTenantIdBySlug(slug);
+  if (!tenantId) redirect(`/${slug}/login?error=auth`);
 
   // Block duplicate pending requests
   const { data: existingRequest } = await admin
     .from("tenant_access_requests")
     .select("id")
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", tenantId)
     .eq("email", email)
     .eq("status", "pending")
     .maybeSingle();
@@ -126,7 +134,7 @@ export const sendMagicLinkForTenantAction = async (
     const { data: membership } = await admin
       .from("tenant_memberships")
       .select("user_id")
-      .eq("tenant_id", tenant.id)
+      .eq("tenant_id", tenantId)
       .eq("user_id", existingUser.id)
       .maybeSingle();
 
@@ -151,13 +159,13 @@ export const sendMagicLinkForTenantAction = async (
 
   // Create the access request
   await admin.from("tenant_access_requests").insert({
-    tenant_id: tenant.id,
+    tenant_id: tenantId,
     email,
   });
 
   await logAuditEvent({
     action: "tenant.access_request.created",
-    tenantId: tenant.id,
+    tenantId,
     payload: { email },
   });
 

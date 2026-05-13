@@ -44,7 +44,7 @@ const getPostLoginDestination = async (): Promise<string> => {
     const { slug } = first.tenants;
     return first.role === "tenant_admin"
       ? `/${slug}/backoffice`
-      : `/${slug}/backoffice/clients`;
+      : `/${slug}/clients`;
   }
 
   return "/";

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ClientPortalPageProps = {
   params: Promise<{ lang: string; slug: string }>;
@@ -8,9 +8,9 @@ type ClientPortalPageProps = {
 
 export default async function ClientPortalPage({ params }: ClientPortalPageProps) {
   const { slug } = await params;
-  const admin = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
 
-  const { data: tenant } = await admin
+  const { data: tenant } = await supabase
     .from("tenants")
     .select("name")
     .eq("slug", slug)

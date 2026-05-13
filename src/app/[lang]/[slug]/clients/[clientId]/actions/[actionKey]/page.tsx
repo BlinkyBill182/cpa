@@ -34,7 +34,6 @@ export default async function ActionExecutionPage({ params }: ActionExecutionPag
       .single(),
   ]);
 
-  // Guard: client must exist and action must be enabled for this office
   if (!client || !config?.is_enabled) notFound();
 
   const actionDict = dict.actions[action.dictNamespace];
@@ -43,7 +42,7 @@ export default async function ActionExecutionPage({ params }: ActionExecutionPag
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
         <a
-          href={`/${slug}/backoffice/clients/${clientId}`}
+          href={`/${slug}/clients/${clientId}`}
           className="text-sm text-blue-600 hover:underline"
         >
           ← {dict.actions.marketplace.backToActions}
@@ -65,7 +64,7 @@ export default async function ActionExecutionPage({ params }: ActionExecutionPag
 
       <div>
         <a
-          href={`/${slug}/backoffice/clients/${clientId}`}
+          href={`/${slug}/clients/${clientId}`}
           className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
         >
           {dict.actions.marketplace.backToClient}

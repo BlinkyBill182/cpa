@@ -21,9 +21,6 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <a href={`/${slug}/backoffice`} className="text-sm text-blue-600 hover:underline">
-          ← {dict.tenantBackoffice.title}
-        </a>
         <h1 className="text-3xl font-semibold text-blue-900">{dict.clients.title}</h1>
         <p className="text-slate-700">{dict.clients.description}</p>
       </header>
@@ -35,7 +32,7 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
           {(clients ?? []).map((client) => (
             <li key={client.id}>
               <a
-                href={`/${slug}/backoffice/clients/${client.id}`}
+                href={`/${slug}/clients/${client.id}`}
                 className="flex items-center justify-between rounded-md border border-blue-100 px-4 py-3 hover:bg-blue-50 transition-colors"
               >
                 <div>
