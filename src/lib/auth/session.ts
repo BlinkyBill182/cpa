@@ -3,7 +3,6 @@ import "server-only";
 import { notFound, redirect } from "next/navigation";
 
 import type { TenantRole } from "@/lib/auth/constants";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const requireUser = async (_locale?: string) => {
@@ -44,10 +43,7 @@ export const requireTenantAccessBySlug = async (_locale: string, slug: string) =
 
   const user = authData.user;
 
-  // Admin client bypasses RLS: a non-member cannot see a tenant row via their
-  // own session, so we'd get a false 404 instead of the correct "access denied".
-  const admin = createSupabaseAdminClient();
-  const { data: tenant } = await admin
+  const { data: tenant } = await supabase
     .from("tenants")
     .select("id, name, slug")
     .eq("slug", slug)
