@@ -5,38 +5,38 @@ const OWNER_PASSWORD = process.env.E2E_OWNER_PASSWORD ?? "";
 
 test.describe("Login page", () => {
   test("renders both sign-in form and magic link form", async ({ page }) => {
-    await page.goto("/en/login");
-    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
-    await expect(page.getByLabel(/email/i).first()).toBeVisible();
-    await expect(page.getByLabel(/password/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /send magic link/i })).toBeVisible();
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { name: /התחברות/ })).toBeVisible();
+    await expect(page.getByLabel(/אימייל/).first()).toBeVisible();
+    await expect(page.getByLabel(/סיסמה/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /שלחו לינק כניסה/ })).toBeVisible();
   });
 
   test("shows error message for wrong credentials", async ({ page }) => {
-    await page.goto("/en/login");
-    await page.getByLabel(/email/i).first().fill("wrong@example.com");
-    await page.getByLabel(/password/i).fill("wrongpassword123");
-    await page.getByRole("button", { name: /continue/i }).click();
+    await page.goto("/login");
+    await page.getByLabel(/אימייל/).first().fill("wrong@example.com");
+    await page.getByLabel(/סיסמה/).fill("wrongpassword123");
+    await page.getByRole("button", { name: /המשך/ }).click();
     await expect(page).toHaveURL(/error=auth/);
-    await expect(page.getByText(/authentication failed/i)).toBeVisible();
+    await expect(page.getByText(/ההתחברות נכשלה/)).toBeVisible();
   });
 
   test("redirects to backoffice after successful owner login", async ({ page }) => {
     test.skip(!OWNER_EMAIL || !OWNER_PASSWORD, "E2E_OWNER_EMAIL and E2E_OWNER_PASSWORD required");
-    await page.goto("/en/login");
-    await page.getByLabel(/email/i).first().fill(OWNER_EMAIL);
-    await page.getByLabel(/password/i).fill(OWNER_PASSWORD);
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForURL("/en/backoffice/tenants", { timeout: 15000 });
-    await expect(page).toHaveURL("/en/backoffice/tenants");
+    await page.goto("/login");
+    await page.getByLabel(/אימייל/).first().fill(OWNER_EMAIL);
+    await page.getByLabel(/סיסמה/).fill(OWNER_PASSWORD);
+    await page.getByRole("button", { name: /המשך/ }).click();
+    await page.waitForURL("/backoffice/tenants", { timeout: 15000 });
+    await expect(page).toHaveURL("/backoffice/tenants");
   });
 
   test("magic link form submits and navigates away from the blank form", async ({ page }) => {
-    await page.goto("/en/login");
+    await page.goto("/login");
     const magicLinkForm = page.locator("form").last();
-    await expect(magicLinkForm.getByLabel(/email/i)).toBeVisible();
-    await magicLinkForm.getByLabel(/email/i).fill("any@example.com");
-    await page.getByRole("button", { name: /send magic link/i }).click();
+    await expect(magicLinkForm.getByLabel(/אימייל/)).toBeVisible();
+    await magicLinkForm.getByLabel(/אימייל/).fill("any@example.com");
+    await page.getByRole("button", { name: /שלחו לינק כניסה/ }).click();
     await page.waitForURL((url) => url.searchParams.has("otp") || url.searchParams.has("error"), {
       timeout: 10000,
     });
@@ -44,30 +44,30 @@ test.describe("Login page", () => {
 });
 
 test.describe("Protected routes redirect unauthenticated users", () => {
-  test("/en/backoffice/tenants redirects to login", async ({ page }) => {
-    await page.goto("/en/backoffice/tenants");
-    await expect(page).toHaveURL(/\/en\/login/);
+  test("/backoffice/tenants redirects to login", async ({ page }) => {
+    await page.goto("/backoffice/tenants");
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test("/en/some-office/backoffice redirects to login", async ({ page }) => {
-    await page.goto("/en/some-office/backoffice");
-    await expect(page).toHaveURL(/\/en\/login/);
+  test("/some-office/backoffice redirects to login", async ({ page }) => {
+    await page.goto("/some-office/backoffice");
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test("/en/some-office/backoffice/team redirects to login", async ({ page }) => {
-    await page.goto("/en/some-office/backoffice/team");
-    await expect(page).toHaveURL(/\/en\/login/);
+  test("/some-office/backoffice/team redirects to login", async ({ page }) => {
+    await page.goto("/some-office/backoffice/team");
+    await expect(page).toHaveURL(/\/login/);
   });
 });
 
 test.describe("Locale routing", () => {
-  test("root / redirects to /en", async ({ page }) => {
+  test("root / serves content without locale prefix", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/en/);
+    await expect(page).toHaveURL("/");
   });
 
-  test("/he/login renders Hebrew text", async ({ page }) => {
-    await page.goto("/he/login");
+  test("/login renders Hebrew text", async ({ page }) => {
+    await page.goto("/login");
     await expect(page.getByRole("heading", { name: /התחברות/ })).toBeVisible();
   });
 

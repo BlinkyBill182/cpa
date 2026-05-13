@@ -10,11 +10,11 @@ const TEST_TENANT_NAME = "E2E Test Office";
 const TEST_TENANT_SLUG = "e2e-test-office-stable";
 
 const signInAsOwner = async (page: import("@playwright/test").Page) => {
-  await page.goto("/en/login");
-  await page.getByLabel(/email/i).first().fill(OWNER_EMAIL);
-  await page.getByLabel(/password/i).fill(OWNER_PASSWORD);
-  await page.getByRole("button", { name: /continue/i }).click();
-  await page.waitForURL((url) => url.pathname === "/en/backoffice/tenants" || url.pathname === "/en", {
+  await page.goto("/login");
+  await page.getByLabel(/אימייל/).first().fill(OWNER_EMAIL);
+  await page.getByLabel(/סיסמה/).fill(OWNER_PASSWORD);
+  await page.getByRole("button", { name: /המשך/ }).click();
+  await page.waitForURL((url) => url.pathname === "/backoffice/tenants" || url.pathname === "/", {
     timeout: 15000,
   });
 };
@@ -39,27 +39,27 @@ test.describe("Owner tenant management", () => {
 
   test("owner can create a new tenant", async ({ page }) => {
     await signInAsOwner(page);
-    await page.goto("/en/backoffice/tenants");
+    await page.goto("/backoffice/tenants");
 
-    await expect(page.getByRole("heading", { name: /tenant management/i })).toBeVisible();
-    await page.getByLabel(/tenant name/i).fill(TEST_TENANT_NAME);
-    await page.getByLabel(/tenant slug/i).fill(TEST_TENANT_SLUG);
-    await page.getByRole("button", { name: /create tenant/i }).click();
+    await expect(page.getByRole("heading", { name: /ניהול דיירים/ })).toBeVisible();
+    await page.getByLabel(/שם הדייר/).fill(TEST_TENANT_NAME);
+    await page.getByLabel(/מזהה דייר/).fill(TEST_TENANT_SLUG);
+    await page.getByRole("button", { name: /יצירת דייר/ }).click();
 
     await expect(page.getByText(TEST_TENANT_NAME)).toBeVisible();
   });
 
   test("tenant card shows a manage members link", async ({ page }) => {
     await signInAsOwner(page);
-    await page.goto("/en/backoffice/tenants");
+    await page.goto("/backoffice/tenants");
 
     await expect(page.getByText(TEST_TENANT_NAME)).toBeVisible({ timeout: 10000 });
     const card = page.locator("article").filter({ hasText: TEST_TENANT_NAME });
-    await expect(card.getByRole("link", { name: /manage members/i })).toBeVisible();
+    await expect(card.getByRole("link", { name: /ניהול חברים/ })).toBeVisible();
   });
 
   test("non-owner cannot access backoffice tenants page", async ({ page }) => {
-    await page.goto("/en/backoffice/tenants");
-    await expect(page).toHaveURL(/\/en\/login/);
+    await page.goto("/backoffice/tenants");
+    await expect(page).toHaveURL(/\/login/);
   });
 });

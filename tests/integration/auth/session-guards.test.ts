@@ -84,7 +84,7 @@ describe("requirePlatformOwner", () => {
       await requirePlatformOwner("en");
       expect.fail("Expected redirect");
     } catch (error) {
-      expectRedirectTo(error, "/en");
+      expectRedirectTo(error, "/");
     }
   });
 });
