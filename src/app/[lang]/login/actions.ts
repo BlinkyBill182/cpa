@@ -8,7 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const passwordSchema = z.object({
   email: z.email(),
-  password: z.string().min(8),
+  password: z.string().min(6),
 });
 
 const otpSchema = z.object({
