@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { DarkModeToggle } from "@/components/layout/dark-mode-toggle";
 import { HtmlDirSync } from "@/components/layout/html-dir-sync";
 import { TopNav } from "@/components/layout/top-nav";
 import { hasLocale, locales } from "@/i18n/config";
@@ -44,6 +45,7 @@ export default async function LocaleLayout({
         isLoggedIn={!!user}
         signOut={signOutAction}
         labels={dict.nav}
+        darkModeToggle={<DarkModeToggle />}
       />
       <main className="mx-auto flex w-full max-w-6xl flex-1 px-6 py-10">{children}</main>
     </>

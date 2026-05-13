@@ -19,12 +19,16 @@ A multi-tenant SaaS platform for CPA offices. Each office (tenant) gets its own 
 
 | URL | Purpose |
 |---|---|
-| `/{locale}/login` | Login (password + magic link) |
-| `/{locale}/backoffice/tenants` | Platform owner: manage all offices |
-| `/{locale}/backoffice/tenants/{id}/members` | Platform owner: manage office members |
-| `/{locale}/{slug}` | Public client portal for a CPA office |
-| `/{locale}/{slug}/backoffice` | CPA office staff backoffice |
-| `/{locale}/{slug}/backoffice/team` | CPA office team management |
+| `/login` | Login (password + magic link) |
+| `/backoffice/tenants` | Platform owner: manage all offices |
+| `/backoffice/tenants/{id}/members` | Platform owner: manage office members |
+| `/backoffice/tenants/{id}/actions` | Platform owner: enable/disable actions per office |
+| `/{slug}` | Public client portal for a CPA office |
+| `/{slug}/backoffice` | CPA office staff backoffice |
+| `/{slug}/backoffice/team` | CPA office team management |
+| `/{slug}/backoffice/clients` | Client list for the office |
+| `/{slug}/backoffice/clients/{clientId}` | Client detail + action marketplace |
+| `/{slug}/backoffice/clients/{clientId}/actions/{key}` | Action execution page |
 
 ## Access hierarchy
 
