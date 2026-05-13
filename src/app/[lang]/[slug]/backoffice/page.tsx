@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { getDictionary } from "@/i18n/get-dictionary";
-import { requireTenantAccessBySlug } from "@/lib/auth/session";
+import { requireTenantAdminBySlug } from "@/lib/auth/session";
 
 type TenantBackofficePageProps = {
   params: Promise<{ lang: string; slug: string }>;
@@ -10,7 +10,7 @@ type TenantBackofficePageProps = {
 export default async function TenantBackofficePage({ params }: TenantBackofficePageProps) {
   const { lang, slug } = await params;
   const dict = await getDictionary(lang);
-  const { tenant, role } = await requireTenantAccessBySlug(lang, slug);
+  const { tenant, role } = await requireTenantAdminBySlug(lang, slug);
 
   return (
     <section className="flex w-full flex-col gap-8">

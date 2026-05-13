@@ -83,7 +83,7 @@ export const requireTenantAdminBySlug = async (_locale: string, slug: string) =>
   const access = await requireTenantAccessBySlug(_locale, slug);
 
   if (access.role !== "tenant_admin") {
-    redirect(`/${slug}/backoffice?error=forbidden`);
+    redirect(`/?error=forbidden`);
   }
 
   return access;
