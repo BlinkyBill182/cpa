@@ -3,6 +3,32 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      office_action_configs: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          action_key: string;
+          is_enabled: boolean;
+          config: Json | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          action_key: string;
+          is_enabled?: boolean;
+          config?: Json | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          action_key?: string;
+          is_enabled?: boolean;
+          config?: Json | null;
+          updated_at?: string;
+        };
+      };
       audit_logs: {
         Row: {
           id: string;

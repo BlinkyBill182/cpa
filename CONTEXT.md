@@ -48,16 +48,26 @@ cpa/
 │   │   │   │   └── tenants/
 │   │   │   │       ├── page.tsx        # Platform owner: list/create tenants
 │   │   │   │       ├── actions.ts      # createTenantAction (validates reserved slugs)
-│   │   │   │       └── [tenantId]/members/
-│   │   │   │           ├── page.tsx    # Owner: manage members of a tenant
-│   │   │   │           └── actions.ts  # assignMemberByUserIdAction
+│   │   │   │       └── [tenantId]/
+│   │   │   │           ├── members/
+│   │   │   │           │   ├── page.tsx    # Owner: manage members of a tenant
+│   │   │   │           │   └── actions.ts  # assignMemberByUserIdAction
+│   │   │   │           └── actions/
+│   │   │   │               ├── page.tsx    # Owner: enable/disable actions per tenant
+│   │   │   │               └── actions.ts  # toggleActionAction
 │   │   │   └── [slug]/                 # DYNAMIC route — CPA office identified by slug
 │   │   │       ├── page.tsx            # Public client portal (no auth required)
 │   │   │       └── backoffice/
 │   │   │           ├── page.tsx        # Tenant backoffice dashboard
-│   │   │           └── team/
-│   │   │               ├── page.tsx    # Tenant admin: manage team members
-│   │   │               └── actions.ts  # inviteMemberAction, removeMemberAction, updateMemberRoleAction
+│   │   │           ├── team/
+│   │   │           │   ├── page.tsx    # Tenant admin: manage team members
+│   │   │           │   └── actions.ts  # inviteMemberAction, removeMemberAction, updateMemberRoleAction
+│   │   │           └── clients/
+│   │   │               ├── page.tsx                        # Client list for the office
+│   │   │               └── [clientId]/
+│   │   │                   ├── page.tsx                    # Client detail + action marketplace
+│   │   │                   └── actions/[actionKey]/
+│   │   │                       └── page.tsx                # Action execution page (stub)
 │   │   ├── auth/
 │   │   │   └── callback/route.ts       # Supabase auth callback (magic link, invites)
 │   │   ├── layout.tsx                  # Root layout (suppressHydrationWarning on body)
@@ -72,6 +82,14 @@ cpa/
 │   │       ├── en.json
 │   │       └── he.json
 │   ├── lib/
+│   │   ├── actions/
+│   │   │   ├── types.ts                # ActionDefinition interface, ActionDictNamespace union
+│   │   │   ├── registry.ts             # getAllActions(), getAction(key), getActionsForTenant(slug)
+│   │   │   └── definitions/
+│   │   │       ├── annual-income-summary/definition.ts
+│   │   │       ├── document-request/definition.ts
+│   │   │       ├── tax-reminder/definition.ts
+│   │   │       └── client-report/definition.ts   # office-specific example
 │   │   ├── auth/
 │   │   │   ├── audit.ts                # logAuditEvent() — writes to audit_logs
 │   │   │   ├── constants.ts            # ACTIVE_TENANT_COOKIE, tenantRoles, TenantRole
@@ -133,6 +151,7 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 | `tenant_access_requests` | Self-service access requests from office login page. `status`: `pending` → `approved`/`rejected`. `role` is set at approval time. |
 | `office_clients` | CPA office's end-clients. Scoped to `tenant_id`. |
 | `seasonal_income_records` | Per-client annual income data. Scoped to `tenant_id`. |
+| `office_action_configs` | Which actions are enabled per CPA office. Unique `(tenant_id, action_key)`. Platform owner writes; tenant members read. |
 | `workflow_runs` | Reserved for future automation/CRON tracking. |
 | `audit_logs` | Immutable event log. Written via `logAuditEvent()`. Never mutated. |
 
@@ -144,6 +163,7 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 - **`tenant_invitations`**: `tenant_admin` creates invites for their tenant. Platform owner sees all.
 - **`tenant_access_requests`**: Inserted via admin client (no INSERT policy needed). `tenant_admin` and platform owner can SELECT/UPDATE. Pending requests shown in team management page.
 - **`office_clients`, `seasonal_income_records`**: Tenant members only see rows for their own tenant.
+- **`office_action_configs`**: Platform owner has full CRUD. Tenant members read-only for their own tenant.
 - **`audit_logs`**: Insert-only for authenticated users; no update/delete.
 
 ### Helper DB Functions
@@ -309,7 +329,33 @@ Required GitHub Secrets: `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, `TEST_SU
 
 ---
 
-## 10. Known Decisions & Trade-offs
+## 10. Action System
+
+The client action marketplace lets staff run configurable operations on individual clients.
+
+### Architecture
+
+- **Action definitions live in code** (`src/lib/actions/definitions/`). Each definition is an `ActionDefinition` object with a unique `key`, `icon`, `dictNamespace`, and optional `officeSpecific` slug list.
+- **Registry** (`src/lib/actions/registry.ts`) exports `getAllActions()`, `getAction(key)`, and `getActionsForTenant(slug)`. Adding a new action is a pure code change — no DB migration needed.
+- **`office_action_configs` table** stores which actions are enabled per office. The platform owner toggles this from `/backoffice/tenants/{id}/actions`.
+- **Marketplace UI** at `/{slug}/backoffice/clients/{clientId}` shows a card grid of enabled actions for the office (filtered by both DB config and `officeSpecific`).
+- **Execution pages** at `/{slug}/backoffice/clients/{clientId}/actions/{actionKey}` — currently stubs; real logic is added per action as it is built.
+
+### Adding a new action
+
+1. Create `src/lib/actions/definitions/{action-key}/definition.ts` exporting an `ActionDefinition`.
+2. Add the definition to the array in `src/lib/actions/registry.ts`.
+3. Add `actions.{camelCaseKey}.title` and `.description` to both `en.json` and `he.json`, and add the namespace to the `ActionDictNamespace` union in `types.ts`.
+4. Build the execution page at `src/app/[lang]/[slug]/backoffice/clients/[clientId]/actions/{action-key}/page.tsx`.
+5. Platform owner enables the action per office via the UI.
+
+### Office-specific actions
+
+Set `officeSpecific: ["office-slug"]` in the definition. The action will only appear in the registry results for matching offices and will be marked with an "Office-specific" badge in the platform owner toggle UI.
+
+---
+
+## 11. Known Decisions & Trade-offs
 
 | Decision | Reason |
 |---|---|
@@ -324,8 +370,9 @@ Required GitHub Secrets: `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, `TEST_SU
 
 ---
 
-## 11. What Is Not Yet Built
+## 12. What Is Not Yet Built
 
+- Actual execution logic for individual actions (all action execution pages are stubs)
 - Seasonal income management feature (data entry, Google Sheets import)
 - Client file upload page
 - Email notifications (transactional)

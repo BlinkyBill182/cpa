@@ -87,6 +87,12 @@ export default async function BackofficeTenantsPage({ params, searchParams }: Ba
                 {dict.ownerTenants.manageMembers}
               </a>
               <a
+                href={`/backoffice/tenants/${tenant.id}/actions`}
+                className="rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
+              >
+                {dict.ownerTenants.manageActions}
+              </a>
+              <a
                 href={`/${tenant.slug}/backoffice`}
                 className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
               >

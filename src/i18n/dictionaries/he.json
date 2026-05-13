@@ -34,8 +34,53 @@
     "submit": "יצירת דייר",
     "empty": "עדיין לא נוצרו דיירים.",
     "manageMembers": "ניהול חברים",
+    "manageActions": "ניהול פעולות",
     "openBackoffice": "פתח בק אופיס",
     "error": "הפעולה נכשלה. אנא בדקו את הקלט."
+  },
+  "ownerActions": {
+    "title": "הגדרת פעולות",
+    "description": "הפעל או כבה פעולות עבור משרד רואי חשבון זה.",
+    "officeSpecific": "ייחודי למשרד",
+    "enable": "הפעל",
+    "disable": "כבה",
+    "noActions": "לא הוגדרו פעולות.",
+    "backToTenants": "חזרה לדיירים",
+    "error": "הפעולה נכשלה. אנא נסו שנית."
+  },
+  "clients": {
+    "title": "לקוחות",
+    "description": "ניהול לקוחות המשרד.",
+    "empty": "אין לקוחות עדיין.",
+    "taxId": "מספר עוסק",
+    "viewActions": "הפעל פעולה"
+  },
+  "actions": {
+    "marketplace": {
+      "title": "פעולות",
+      "description": "בחרו פעולה להפעלה עבור לקוח זה.",
+      "run": "הפעל",
+      "empty": "לא הופעלו פעולות עבור משרד זה. פנו למנהל המערכת.",
+      "backToClient": "חזרה ללקוח",
+      "comingSoon": "פעולה זו עדיין בפיתוח.",
+      "backToActions": "חזרה לפעולות"
+    },
+    "annualIncomeSummary": {
+      "title": "סיכום הכנסות שנתי",
+      "description": "יצירת דוח סיכום הכנסות שנתי עבור לקוח זה."
+    },
+    "documentRequest": {
+      "title": "בקשת מסמך",
+      "description": "שליחת בקשת מסמך ללקוח זה."
+    },
+    "taxReminder": {
+      "title": "תזכורת הגשת דוח מס",
+      "description": "שליחת תזכורת להגשת דוח מס ללקוח זה."
+    },
+    "clientReport": {
+      "title": "ייצוא דוח לקוח",
+      "description": "ייצוא דוח לקוח מלא ל-PDF או Google Sheets."
+    }
   },
   "ownerMembers": {
     "title": "ניהול חברי צוות",

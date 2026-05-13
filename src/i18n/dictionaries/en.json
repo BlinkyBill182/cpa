@@ -34,8 +34,53 @@
     "submit": "Create tenant",
     "empty": "No tenants yet.",
     "manageMembers": "Manage members",
+    "manageActions": "Manage actions",
     "openBackoffice": "Open backoffice",
     "error": "Action failed. Please verify the input."
+  },
+  "ownerActions": {
+    "title": "Action configuration",
+    "description": "Enable or disable actions for this CPA office.",
+    "officeSpecific": "Office-specific",
+    "enable": "Enable",
+    "disable": "Disable",
+    "noActions": "No actions defined.",
+    "backToTenants": "Back to tenants",
+    "error": "Action failed. Please try again."
+  },
+  "clients": {
+    "title": "Clients",
+    "description": "Manage clients for this office.",
+    "empty": "No clients yet.",
+    "taxId": "Tax ID",
+    "viewActions": "Run an action"
+  },
+  "actions": {
+    "marketplace": {
+      "title": "Actions",
+      "description": "Select an action to run for this client.",
+      "run": "Run",
+      "empty": "No actions are enabled for this office. Contact your platform administrator.",
+      "backToClient": "Back to client",
+      "comingSoon": "This action is coming soon.",
+      "backToActions": "Back to actions"
+    },
+    "annualIncomeSummary": {
+      "title": "Annual Income Summary",
+      "description": "Generate an annual income summary report for this client."
+    },
+    "documentRequest": {
+      "title": "Request a Document",
+      "description": "Send a document request to this client."
+    },
+    "taxReminder": {
+      "title": "Tax Filing Reminder",
+      "description": "Send a tax filing reminder to this client."
+    },
+    "clientReport": {
+      "title": "Export Client Report",
+      "description": "Export a full client report to PDF or Google Sheets."
+    }
   },
   "ownerMembers": {
     "title": "Member management",
