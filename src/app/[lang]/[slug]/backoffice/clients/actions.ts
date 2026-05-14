@@ -157,11 +157,49 @@ export const importOfficeClientsCsvAction = async (_locale: string, slug: string
 
       if (error) skipped++;
       else updated++;
+    } else if (row.tax_id) {
+      const tax = row.tax_id.trim();
+      const { data: matches } = await supabase
+        .from("office_clients")
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .eq("tax_id", tax)
+        .limit(2);
+
+      if ((matches?.length ?? 0) > 1) {
+        skipped++;
+        continue;
+      }
+
+      const existing = matches?.[0];
+      if (existing) {
+        const { error } = await supabase
+          .from("office_clients")
+          .update({
+            name: row.name,
+            tax_id: tax,
+            deleted_at: null,
+          })
+          .eq("id", existing.id)
+          .eq("tenant_id", tenant.id);
+
+        if (error) skipped++;
+        else updated++;
+      } else {
+        const { error } = await supabase.from("office_clients").insert({
+          tenant_id: tenant.id,
+          name: row.name,
+          tax_id: tax,
+        });
+
+        if (error) skipped++;
+        else inserted++;
+      }
     } else {
       const { error } = await supabase.from("office_clients").insert({
         tenant_id: tenant.id,
         name: row.name,
-        tax_id: row.tax_id,
+        tax_id: null,
       });
 
       if (error) skipped++;

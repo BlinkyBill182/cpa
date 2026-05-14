@@ -1,4 +1,7 @@
-/** Split one CSV line respecting double-quoted fields. */
+/** Strip BOM and whitespace from a header cell. */
+export const normalizeHeaderCell = (s: string) => s.trim().replace(/^\ufeff/, "");
+
+/** Split one CSV record line respecting double-quoted fields (single-line record). */
 export const splitCsvLine = (line: string): string[] => {
   const out: string[] = [];
   let cur = "";
@@ -29,29 +32,89 @@ export const splitCsvLine = (line: string): string[] => {
   return out.map((s) => s.trim());
 };
 
+/**
+ * Split file into logical CSV records so quoted fields may contain newlines
+ * (common for Google Sheets exports).
+ */
+export const splitCsvRecords = (text: string): string[] => {
+  const records: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = false;
+          cur += c;
+        }
+      } else {
+        cur += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+      cur += c;
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      if (cur.trim().length > 0) records.push(cur);
+      cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  if (cur.trim().length > 0) records.push(cur);
+  return records;
+};
+
+const isNameHeader = (h: string) => {
+  const x = normalizeHeaderCell(h);
+  return x === "שם" || x.toLowerCase() === "name";
+};
+
+const isTaxIdHeader = (h: string) => {
+  const x = normalizeHeaderCell(h);
+  return x === "ת.ז" || x.toLowerCase() === "tax_id";
+};
+
+const isIdHeader = (h: string) => normalizeHeaderCell(h).toLowerCase() === "id";
+
 export type OfficeClientCsvRow = {
+  /** Our row UUID when present in CSV (optional). */
   id: string | null;
   name: string;
+  /** National / company ID (ת.ז, tax_id column). */
   tax_id: string | null;
 };
 
-const norm = (s: string) => s.trim().toLowerCase();
+export const parseOfficeClientsCsv = (
+  text: string,
+): { headers: string[]; rows: OfficeClientCsvRow[] } => {
+  const records = splitCsvRecords(text);
+  if (records.length === 0) return { headers: [], rows: [] };
 
-export const parseOfficeClientsCsv = (text: string): { headers: string[]; rows: OfficeClientCsvRow[] } => {
-  const lines = text.split(/\r?\n/).filter((l) => l.length > 0);
-  if (lines.length === 0) return { headers: [], rows: [] };
+  const rawHeaders = splitCsvLine(records[0]);
+  const headers = rawHeaders.map(normalizeHeaderCell);
 
-  const headers = splitCsvLine(lines[0]).map(norm);
-  const idIdx = headers.indexOf("id");
-  const nameIdx = headers.indexOf("name");
+  let nameIdx = -1;
+  let taxIdx = -1;
+  let idIdx = -1;
+  for (let j = 0; j < rawHeaders.length; j++) {
+    const cell = rawHeaders[j] ?? "";
+    if (nameIdx < 0 && isNameHeader(cell)) nameIdx = j;
+    if (taxIdx < 0 && isTaxIdHeader(cell)) taxIdx = j;
+    if (idIdx < 0 && isIdHeader(cell)) idIdx = j;
+  }
+
   if (nameIdx < 0) {
     return { headers, rows: [] };
   }
-  const taxIdx = headers.indexOf("tax_id");
 
   const rows: OfficeClientCsvRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cells = splitCsvLine(lines[i]);
+  for (let i = 1; i < records.length; i++) {
+    const cells = splitCsvLine(records[i]);
     const name = (cells[nameIdx] ?? "").trim();
     if (!name) continue;
     const rawId = idIdx >= 0 ? (cells[idIdx] ?? "").trim() : "";
