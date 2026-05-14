@@ -3,7 +3,7 @@ import { getAllActions } from "@/lib/actions/registry";
 import { requirePlatformOwner } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-import { toggleActionAction } from "./actions";
+import { ActionEnableToggle } from "./action-enable-toggle";
 
 type OwnerActionsPageProps = {
   params: Promise<{ lang: string; tenantId: string }>;
@@ -71,20 +71,14 @@ export default async function OwnerActionsPage({ params }: OwnerActionsPageProps
                   </div>
                 </div>
 
-                <form action={toggleActionAction.bind(null, lang, tenantId)}>
-                  <input type="hidden" name="actionKey" value={action.key} />
-                  <input type="hidden" name="isEnabled" value={String(!isEnabled)} />
-                  <button
-                    type="submit"
-                    className={
-                      isEnabled
-                        ? "rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
-                        : "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-                    }
-                  >
-                    {isEnabled ? dict.ownerActions.disable : dict.ownerActions.enable}
-                  </button>
-                </form>
+                <ActionEnableToggle
+                  lang={lang}
+                  tenantId={tenantId}
+                  actionKey={action.key}
+                  initialEnabled={isEnabled}
+                  labelAllowed={dict.ownerActions.allowed}
+                  labelNotAllowed={dict.ownerActions.notAllowed}
+                />
               </li>
             );
           })}

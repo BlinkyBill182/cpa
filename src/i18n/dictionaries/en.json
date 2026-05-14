@@ -45,6 +45,8 @@
     "officeSpecific": "Office-specific",
     "enable": "Enable",
     "disable": "Disable",
+    "allowed": "Allowed",
+    "notAllowed": "Not allowed",
     "noActions": "No actions defined.",
     "backToTenants": "Back to tenants",
     "error": "Action failed. Please try again."

@@ -45,6 +45,8 @@
     "officeSpecific": "ייחודי למשרד",
     "enable": "הפעל",
     "disable": "כבה",
+    "allowed": "מותר",
+    "notAllowed": "לא מותר",
     "noActions": "לא הוגדרו פעולות.",
     "backToTenants": "חזרה לדיירים",
     "error": "הפעולה נכשלה. אנא נסו שנית."
