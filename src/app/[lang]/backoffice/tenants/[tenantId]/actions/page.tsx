@@ -58,7 +58,7 @@ export default async function OwnerActionsPage({ params }: OwnerActionsPageProps
                 <div className="flex items-start gap-3">
                   <span className="mt-0.5 text-2xl leading-none">{action.icon}</span>
                   <div>
-                    <p className="font-medium">
+                    <p id={`owner-action-${action.key}`} className="font-medium">
                       {actionDict.title}
                       {action.officeSpecific?.length ? (
                         <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-normal text-amber-700">
@@ -76,8 +76,7 @@ export default async function OwnerActionsPage({ params }: OwnerActionsPageProps
                   tenantId={tenantId}
                   actionKey={action.key}
                   initialEnabled={isEnabled}
-                  labelAllowed={dict.ownerActions.allowed}
-                  labelNotAllowed={dict.ownerActions.notAllowed}
+                  labelId={`owner-action-${action.key}`}
                 />
               </li>
             );
