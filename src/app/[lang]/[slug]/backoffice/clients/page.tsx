@@ -134,11 +134,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
       <section className="flex flex-col gap-4 rounded-lg border border-blue-100 p-6 dark:border-slate-700">
         <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">{m.csvImport}</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">{m.csvHint}</p>
-        <form
-          action={importOfficeClientsCsvAction.bind(null, lang, slug)}
-          className="flex max-w-xl flex-col gap-3"
-          encType="multipart/form-data"
-        >
+        <form action={importOfficeClientsCsvAction.bind(null, lang, slug)} className="flex max-w-xl flex-col gap-3">
           <input
             required
             name="csv"
