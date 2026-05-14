@@ -62,6 +62,7 @@ export type Database = {
           name: string;
           tax_id: string | null;
           created_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -69,6 +70,7 @@ export type Database = {
           name: string;
           tax_id?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -76,6 +78,7 @@ export type Database = {
           name?: string;
           tax_id?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
         };
       };
       profiles: {

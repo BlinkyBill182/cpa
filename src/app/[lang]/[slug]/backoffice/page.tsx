@@ -22,16 +22,22 @@ export default async function TenantBackofficePage({ params }: TenantBackofficeP
         </p>
       </header>
 
-      <nav className="flex gap-3">
+      <nav className="flex flex-wrap gap-3">
         <Link
           href={`/${slug}/clients`}
+          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:border-slate-600 dark:text-blue-300 dark:hover:bg-slate-800"
+        >
+          {dict.tenantBackoffice.viewClientList}
+        </Link>
+        <Link
+          href={`/${slug}/backoffice/clients`}
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          {dict.clients.title}
+          {dict.tenantBackoffice.manageClients}
         </Link>
         <Link
           href={`/${slug}/backoffice/team`}
-          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
+          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:border-slate-600 dark:text-blue-300 dark:hover:bg-slate-800"
         >
           {dict.tenantBackoffice.teamLink}
         </Link>

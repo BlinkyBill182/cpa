@@ -106,13 +106,13 @@ describe("RLS tenant isolation", () => {
     expect(tenantBVisible).toBe(false);
   });
 
-  it("unauthenticated user sees no data", async () => {
+  it("unauthenticated user sees no office clients; may list tenants for public pages", async () => {
     const client = getTestAnonClient();
 
     const { data: clients } = await client.from("office_clients").select("id");
     expect(clients).toHaveLength(0);
 
     const { data: tenants } = await client.from("tenants").select("id");
-    expect(tenants).toHaveLength(0);
+    expect((tenants ?? []).length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -77,7 +77,7 @@ export default async function HomePage({ params, searchParams }: HomePageProps) 
           {offices.map((m) => (
             <Link
               key={m.tenants!.slug}
-              href={`/${m.tenants!.slug}/backoffice`}
+              href={`/${m.tenants!.slug}/clients`}
               className="flex w-fit items-center gap-2 rounded-md border border-blue-200 px-5 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
             >
               {m.tenants!.name}

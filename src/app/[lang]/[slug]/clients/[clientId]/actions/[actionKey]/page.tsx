@@ -25,6 +25,7 @@ export default async function ActionExecutionPage({ params }: ActionExecutionPag
       .select("id, name, tax_id")
       .eq("id", clientId)
       .eq("tenant_id", tenant.id)
+      .is("deleted_at", null)
       .single(),
     supabase
       .from("office_action_configs")

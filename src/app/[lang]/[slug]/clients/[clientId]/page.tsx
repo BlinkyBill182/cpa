@@ -22,6 +22,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       .select("id, name, tax_id")
       .eq("id", clientId)
       .eq("tenant_id", tenant.id)
+      .is("deleted_at", null)
       .single(),
     supabase
       .from("office_action_configs")
@@ -46,7 +47,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         <h1 className="text-3xl font-semibold text-blue-900">{client.name}</h1>
         {client.tax_id ? (
           <p className="text-sm text-slate-500">
-            {dict.clients.taxId}: {client.tax_id}
+            {dict.clients.companyNumber}: {client.tax_id}
           </p>
         ) : null}
         <p className="text-slate-700">{dict.actions.marketplace.description}</p>

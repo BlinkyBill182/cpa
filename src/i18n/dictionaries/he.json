@@ -51,10 +51,45 @@
   },
   "clients": {
     "title": "לקוחות",
-    "description": "ניהול לקוחות המשרד.",
+    "description": "צפייה בלקוחות המשרד והפעלת פעולות מותרות.",
     "empty": "אין לקוחות עדיין.",
     "taxId": "מספר עוסק",
+    "companyNumber": "מספר חברה / רישום",
+    "clientId": "מזהה לקוח",
+    "manageClients": "ניהול לקוחות",
     "viewActions": "הפעל פעולה"
+  },
+  "clientManage": {
+    "title": "ניהול לקוחות",
+    "description": "הוספה, עריכה, ארכוב או ייבוא מקובץ CSV (למשל ייצוא מ-Google Sheets). שורה עם id מעדכנת לקוח קיים; שורה בלי id יוצרת לקוח חדש.",
+    "backToClients": "חזרה לרשימת לקוחות",
+    "backToOfficeBackoffice": "בק אופיס המשרד",
+    "addClient": "הוספת לקוח",
+    "name": "שם",
+    "companyNumber": "מספר חברה / רישום",
+    "clientId": "מזהה לקוח",
+    "create": "צור",
+    "save": "שמור",
+    "archive": "ארכב",
+    "archivedAt": "ארכוב ב־",
+    "csvImport": "ייבוא מ־CSV",
+    "csvHint": "שורת כותרות חובה: id (אופציונלי), name, tax_id (אופציונלי). קובץ UTF-8, עד 2 MB.",
+    "csvSubmit": "העלאה וייבוא",
+    "listHeading": "כל הלקוחות",
+    "empty": "אין לקוחות בתצוגה זו.",
+    "showArchived": "הצג מאורכבים",
+    "hideArchived": "הסתר מאורכבים",
+    "errorValidation": "נא לבדוק את שדות הטופס.",
+    "errorSave": "לא ניתן לשמור את השינויים.",
+    "errorCsv": "יש להעלות קובץ CSV עד 2 MB.",
+    "errorCsvEmpty": "לא נמצאו שורות לייבוא (נדרש עמודת name ולפחות שורת נתונים).",
+    "successCreated": "הלקוח נוצר.",
+    "successUpdated": "הלקוח עודכן.",
+    "successArchived": "הלקוח אורכב.",
+    "importComplete": "הייבוא הסתיים.",
+    "importAdded": "נוספו",
+    "importUpdated": "עודכנו",
+    "importSkipped": "דולגו"
   },
   "actions": {
     "marketplace": {
@@ -116,6 +151,8 @@
     "title": "בק אופיס",
     "description": "נהלו את משרד רואי החשבון שלכם.",
     "role": "התפקיד שלך",
-    "teamLink": "ניהול צוות"
+    "teamLink": "ניהול צוות",
+    "manageClients": "ניהול לקוחות",
+    "viewClientList": "רשימת לקוחות"
   }
 }
