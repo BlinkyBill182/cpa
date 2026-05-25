@@ -44,29 +44,29 @@ export default async function ActionExecutionPage({ params }: ActionExecutionPag
       <header className="flex flex-col gap-2">
         <a
           href={`/${slug}/clients/${clientId}`}
-          className="text-sm text-blue-600 hover:underline"
+          className="link-accent text-sm"
         >
           ← {dict.actions.marketplace.backToActions}
         </a>
         <div className="flex items-center gap-3">
           <span className="text-4xl leading-none">{action.icon}</span>
           <div>
-            <h1 className="text-3xl font-semibold text-blue-900">{actionDict.title}</h1>
-            <p className="text-sm text-slate-500">{client.name}</p>
+            <h1 className="page-title">{actionDict.title}</h1>
+            <p className="text-sm text-muted">{client.name}</p>
           </div>
         </div>
-        <p className="text-slate-700">{actionDict.description}</p>
+        <p className="text-muted">{actionDict.description}</p>
       </header>
 
-      <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50 px-6 py-10 text-center">
-        <p className="text-lg font-medium text-blue-700">{dict.actions.marketplace.comingSoon}</p>
-        <p className="mt-1 text-sm text-slate-500">{action.key}</p>
+      <div className="rounded-xl border border-dashed border-border bg-accent-soft/40 px-6 py-10 text-center">
+        <p className="text-lg font-medium text-accent">{dict.actions.marketplace.comingSoon}</p>
+        <p className="mt-1 text-sm text-muted">{action.key}</p>
       </div>
 
       <div>
         <a
           href={`/${slug}/clients/${clientId}`}
-          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
+          className="btn-secondary"
         >
           {dict.actions.marketplace.backToClient}
         </a>

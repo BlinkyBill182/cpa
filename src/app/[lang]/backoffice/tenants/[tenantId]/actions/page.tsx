@@ -1,7 +1,9 @@
+import { notFound } from "next/navigation";
+
 import { getDictionary } from "@/i18n/get-dictionary";
 import { getAllActions } from "@/lib/actions/registry";
 import { requirePlatformOwner } from "@/lib/auth/session";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { ActionEnableToggle } from "./action-enable-toggle";
 
@@ -14,15 +16,20 @@ export default async function OwnerActionsPage({ params }: OwnerActionsPageProps
   const dict = await getDictionary(lang);
   await requirePlatformOwner(lang);
 
-  const admin = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
 
-  const [{ data: tenant }, { data: configs }] = await Promise.all([
-    admin.from("tenants").select("id, name, slug").eq("id", tenantId).single(),
-    admin
-      .from("office_action_configs")
-      .select("action_key, is_enabled")
-      .eq("tenant_id", tenantId),
-  ]);
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("id, name, slug")
+    .eq("id", tenantId)
+    .single();
+
+  const { data: configs } = await supabase
+    .from("office_action_configs")
+    .select("action_key, is_enabled")
+    .eq("tenant_id", tenantId);
+
+  if (!tenant) notFound();
 
   const enabledKeys = new Set(
     (configs ?? []).filter((c) => c.is_enabled).map((c) => c.action_key),
@@ -33,18 +40,18 @@ export default async function OwnerActionsPage({ params }: OwnerActionsPageProps
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <a href="/backoffice/tenants" className="text-sm text-blue-600 hover:underline">
+        <a href="/backoffice/tenants" className="link-accent text-sm">
           ← {dict.ownerActions.backToTenants}
         </a>
-        <h1 className="text-3xl font-semibold text-blue-900">{dict.ownerActions.title}</h1>
-        <p className="text-slate-700">
-          {dict.ownerMembers.tenantLabel}: <span className="font-medium">{tenant?.name ?? tenantId}</span>
+        <h1 className="page-title">{dict.ownerActions.title}</h1>
+        <p className="text-muted">
+          {dict.ownerMembers.tenantLabel}: <span className="font-medium">{tenant.name}</span>
         </p>
-        <p className="text-sm text-slate-500">{dict.ownerActions.description}</p>
+        <p className="text-sm text-muted">{dict.ownerActions.description}</p>
       </header>
 
       {allActions.length === 0 ? (
-        <p className="text-slate-700">{dict.ownerActions.noActions}</p>
+        <p className="text-muted">{dict.ownerActions.noActions}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {allActions.map((action) => {
@@ -53,7 +60,7 @@ export default async function OwnerActionsPage({ params }: OwnerActionsPageProps
             return (
               <li
                 key={action.key}
-                className="flex items-center justify-between rounded-md border border-blue-100 px-4 py-3"
+                className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3"
               >
                 <div className="flex items-start gap-3">
                   <span className="mt-0.5 text-2xl leading-none">{action.icon}</span>
@@ -66,8 +73,8 @@ export default async function OwnerActionsPage({ params }: OwnerActionsPageProps
                         </span>
                       ) : null}
                     </p>
-                    <p className="text-sm text-slate-500">{actionDict.description}</p>
-                    <p className="mt-0.5 font-mono text-xs text-slate-400">{action.key}</p>
+                    <p className="text-sm text-muted">{actionDict.description}</p>
+                    <p className="mt-0.5 font-mono text-xs text-muted">{action.key}</p>
                   </div>
                 </div>
 

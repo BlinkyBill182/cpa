@@ -69,9 +69,9 @@ export default async function OfficeLoginPage({ params, searchParams }: OfficeLo
   return (
     <section className="flex w-full max-w-sm flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-blue-600">{dict.officeLogin.signInTo}</p>
-        <h1 className="text-3xl font-semibold text-blue-900">{tenant.name}</h1>
-        <p className="text-slate-600">{dict.officeLogin.description}</p>
+        <p className="text-sm font-medium text-accent">{dict.officeLogin.signInTo}</p>
+        <h1 className="page-title">{tenant.name}</h1>
+        <p className="text-muted">{dict.officeLogin.description}</p>
       </header>
 
       {error ? (
@@ -85,7 +85,7 @@ export default async function OfficeLoginPage({ params, searchParams }: OfficeLo
           className={`rounded-md border px-3 py-2 text-sm ${
             isWarning
               ? "border-red-200 bg-red-50 text-red-700"
-              : "border-blue-200 bg-blue-50 text-blue-800"
+              : "border-border bg-accent-soft/50 text-accent-soft-foreground"
           }`}
         >
           {statusMessage}
@@ -106,9 +106,9 @@ export default async function OfficeLoginPage({ params, searchParams }: OfficeLo
       />
 
       <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-blue-100" />
-        <span className="text-xs text-slate-500">{dict.login.orLabel}</span>
-        <span className="h-px flex-1 bg-blue-100" />
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted">{dict.login.orLabel}</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       <form action={sendMagicLinkForTenantAction.bind(null, lang, slug)} className="flex flex-col gap-3">
@@ -118,12 +118,12 @@ export default async function OfficeLoginPage({ params, searchParams }: OfficeLo
             required
             name="email"
             type="email"
-            className="rounded-md border border-blue-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="input-field"
           />
         </label>
         <button
           type="submit"
-          className="rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
+          className="btn-secondary"
         >
           {dict.login.magicLink}
         </button>

@@ -338,15 +338,15 @@ The client action marketplace lets staff run configurable operations on individu
 - **Action definitions live in code** (`src/lib/actions/definitions/`). Each definition is an `ActionDefinition` object with a unique `key`, `icon`, `dictNamespace`, and optional `officeSpecific` slug list.
 - **Registry** (`src/lib/actions/registry.ts`) exports `getAllActions()`, `getAction(key)`, and `getActionsForTenant(slug)`. Adding a new action is a pure code change — no DB migration needed.
 - **`office_action_configs` table** stores which actions are enabled per office. The platform owner toggles this from `/backoffice/tenants/{id}/actions`.
-- **Marketplace UI** at `/{slug}/backoffice/clients/{clientId}` shows a card grid of enabled actions for the office (filtered by both DB config and `officeSpecific`).
-- **Execution pages** at `/{slug}/backoffice/clients/{clientId}/actions/{actionKey}` — currently stubs; real logic is added per action as it is built.
+- **Marketplace UI** at `/{slug}/clients/{clientId}` shows a card grid of enabled actions for the office (filtered by both DB config and `officeSpecific`).
+- **Execution pages** at `/{slug}/clients/{clientId}/actions/{actionKey}` — currently stubs; real logic is added per action as it is built.
 
 ### Adding a new action
 
 1. Create `src/lib/actions/definitions/{action-key}/definition.ts` exporting an `ActionDefinition`.
 2. Add the definition to the array in `src/lib/actions/registry.ts`.
 3. Add `actions.{camelCaseKey}.title` and `.description` to both `en.json` and `he.json`, and add the namespace to the `ActionDictNamespace` union in `types.ts`.
-4. Build the execution page at `src/app/[lang]/[slug]/backoffice/clients/[clientId]/actions/{action-key}/page.tsx`.
+4. Build the execution page at `src/app/[lang]/[slug]/clients/[clientId]/actions/[actionKey]/page.tsx`.
 5. Platform owner enables the action per office via the UI.
 
 ### Office-specific actions
@@ -370,7 +370,23 @@ Set `officeSpecific: ["office-slug"]` in the definition. The action will only ap
 
 ---
 
-## 12. What Is Not Yet Built
+## 12. External documentation (Notion workspace)
+
+High-level CPA documentation lives in **Notion** under **Projects → CPA** (beyond this repo).
+
+| Page | Keep aligned with CONTEXT when… |
+|------|--------------------------------|
+| **Project Overview** | Architecture, major features, diagrams, onboarding notes |
+| **Environment Variables** | New or renamed vars, `.env` / README setup |
+| **Role Permissions** | Session guards, RLS-visible behavior, pyramid of owner / tenant_admin / manager / staff |
+
+Use the **Notion MCP** in Cursor to locate and edit those pages; treat Notion parity as part of substantive change workflows (same as updating `CONTEXT.md` / root `CLAUDE.md`).
+
+Cursor’s **global** `~/.cursor/hooks.json` may still remind the agent after `git commit` to run README + docs checks; that complements but does **not replace** documenting Notion triggers here for agents reading this repo.
+
+---
+
+## 13. What Is Not Yet Built
 
 - Actual execution logic for individual actions (all action execution pages are stubs)
 - Seasonal income management feature (data entry, Google Sheets import)

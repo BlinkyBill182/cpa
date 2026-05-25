@@ -3,18 +3,100 @@
 /* Class-based dark mode: applies dark: variants when .dark is on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Ocean palette — light */
+:root {
+  --app-bg: #eef4fb;
+  --app-surface: #ffffff;
+  --app-fg: #0c1929;
+  --app-muted: #5a6b7d;
+  --app-border: #c8d9eb;
+  --app-primary: #1d4ed8;
+  --app-primary-hover: #1e40af;
+  --app-primary-fg: #ffffff;
+  --app-accent: #0284c7;
+  --app-accent-soft: #e0f2fe;
+  --app-accent-soft-fg: #0369a1;
+  --app-brand: #1e40af;
+  --app-ring: #38bdf8;
+}
+
+/* Ocean palette — dark */
+html.dark {
+  color-scheme: dark;
+  --app-bg: #0c1929;
+  --app-surface: #132337;
+  --app-fg: #f0f9ff;
+  --app-muted: #94a3b8;
+  --app-border: #1e3a5f;
+  --app-primary: #0284c7;
+  --app-primary-hover: #0369a1;
+  --app-primary-fg: #ffffff;
+  --app-accent: #38bdf8;
+  --app-accent-soft: #0c4a6e;
+  --app-accent-soft-fg: #bae6fd;
+  --app-brand: #bae6fd;
+  --app-ring: #38bdf8;
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-background: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-foreground: var(--app-fg);
+  --color-muted: var(--app-muted);
+  --color-border: var(--app-border);
+  --color-primary: var(--app-primary);
+  --color-primary-hover: var(--app-primary-hover);
+  --color-primary-foreground: var(--app-primary-fg);
+  --color-accent: var(--app-accent);
+  --color-accent-soft: var(--app-accent-soft);
+  --color-accent-soft-foreground: var(--app-accent-soft-fg);
+  --color-brand: var(--app-brand);
+  --color-ring: var(--app-ring);
 }
 
 body {
-  background: #f0f5ff;
-  color: #0f172a;
+  background: var(--app-bg);
+  color: var(--app-fg);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-html.dark body {
-  background: #0f172a;
-  color: #f1f5f9;
+@layer components {
+  .page-title {
+    @apply text-3xl font-semibold text-foreground;
+  }
+
+  .page-lead {
+    @apply text-muted;
+  }
+
+  .surface-card {
+    @apply rounded-lg border border-border bg-surface;
+  }
+
+  .list-row {
+    @apply flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 transition-colors hover:border-accent/40 hover:bg-accent-soft/30;
+  }
+
+  .action-card {
+    @apply flex h-full flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm transition-shadow hover:border-accent/40 hover:shadow-md;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent-soft/30;
+  }
+
+  .input-field {
+    @apply rounded-md border border-border bg-surface px-3 py-2 text-foreground outline-none focus:ring-2 focus:ring-ring/40;
+  }
+
+  .link-accent {
+    @apply text-accent hover:underline;
+  }
 }

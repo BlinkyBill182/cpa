@@ -32,7 +32,7 @@ export const toggleActionAction = async (
 
   const supabase = await createSupabaseServerClient();
 
-  await supabase.from("office_action_configs").upsert(
+  const { error: upsertError } = await supabase.from("office_action_configs").upsert(
     {
       tenant_id: tenantId,
       action_key: actionKey,
@@ -41,6 +41,10 @@ export const toggleActionAction = async (
     },
     { onConflict: "tenant_id,action_key" },
   );
+
+  if (upsertError) {
+    return;
+  }
 
   await logAuditEvent({
     action: "office_action.toggled",

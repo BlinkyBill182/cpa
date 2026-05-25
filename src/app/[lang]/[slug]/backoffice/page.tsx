@@ -15,9 +15,9 @@ export default async function TenantBackofficePage({ params }: TenantBackofficeP
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold text-blue-900">{tenant.name}</h1>
-        <p className="text-slate-700">{dict.tenantBackoffice.description}</p>
-        <p className="text-sm text-slate-500">
+        <h1 className="page-title">{tenant.name}</h1>
+        <p className="text-muted">{dict.tenantBackoffice.description}</p>
+        <p className="text-sm text-muted">
           {dict.tenantBackoffice.role}: <span className="font-medium">{role}</span>
         </p>
       </header>
@@ -25,19 +25,19 @@ export default async function TenantBackofficePage({ params }: TenantBackofficeP
       <nav className="flex flex-wrap gap-3">
         <Link
           href={`/${slug}/clients`}
-          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:border-slate-600 dark:text-blue-300 dark:hover:bg-slate-800"
+          className="btn-secondary"
         >
           {dict.tenantBackoffice.viewClientList}
         </Link>
         <Link
           href={`/${slug}/backoffice/clients`}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="btn-primary"
         >
           {dict.tenantBackoffice.manageClients}
         </Link>
         <Link
           href={`/${slug}/backoffice/team`}
-          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:border-slate-600 dark:text-blue-300 dark:hover:bg-slate-800"
+          className="btn-secondary"
         >
           {dict.tenantBackoffice.teamLink}
         </Link>

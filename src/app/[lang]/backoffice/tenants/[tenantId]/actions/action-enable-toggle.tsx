@@ -57,11 +57,11 @@ export const ActionEnableToggle = ({
         }}
       />
       <span
-        className="pointer-events-none absolute inset-0 rounded-full bg-slate-300 transition peer-checked:bg-blue-600 peer-focus-within:ring-2 peer-focus-within:ring-blue-400 peer-focus-within:ring-offset-2 dark:bg-slate-600 dark:peer-checked:bg-blue-500"
+        className="pointer-events-none absolute inset-0 rounded-full bg-border transition peer-checked:bg-primary peer-focus-within:ring-2 peer-focus-within:ring-ring peer-focus-within:ring-offset-2 dark:bg-muted/40 dark:peer-checked:bg-primary"
         aria-hidden
       />
       <span
-        className="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-[1.25rem] dark:bg-slate-100"
+        className="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-surface shadow transition-transform peer-checked:translate-x-[1.25rem]"
         aria-hidden
       />
     </label>

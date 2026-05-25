@@ -23,13 +23,13 @@ export const LanguageSwitcher = ({ currentLocale }: { currentLocale: string }) =
     <div className="flex items-center gap-2 text-sm">
       {locales.map((locale, i) => (
         <span key={locale} className="flex items-center gap-2">
-          {i > 0 && <span className="text-blue-200">|</span>}
+          {i > 0 && <span className="text-border">|</span>}
           <button
             onClick={() => switchLocale(locale)}
             className={
               locale === currentLocale
-                ? "font-semibold text-blue-900"
-                : "text-blue-600 hover:text-blue-800"
+                ? "font-semibold text-foreground"
+                : "text-accent hover:text-accent"
             }
           >
             {localeLabels[locale]}

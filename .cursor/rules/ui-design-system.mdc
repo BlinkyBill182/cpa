@@ -1,0 +1,60 @@
+---
+description: Ocean design system — layout, typography, and semantic color tokens for CPA UI
+globs: "**/*.{tsx,css}"
+alwaysApply: false
+---
+
+# UI design system — Ocean palette
+
+Use the **Ocean** theme: classic corporate blue + sky accent. Tokens live in `src/app/globals.css` — never hardcode `blue-*` / `slate-*` for app chrome.
+
+## Semantic tokens (Tailwind)
+
+| Token | Use |
+|-------|-----|
+| `bg-background` | Page canvas |
+| `bg-surface` | Cards, nav, inputs |
+| `text-foreground` | Headings, primary body |
+| `text-muted` | Descriptions, meta |
+| `text-brand` | Logo / app name in nav |
+| `text-accent` | Links, secondary actions |
+| `border-border` | All borders |
+| `bg-primary` / `text-primary-foreground` | Primary buttons |
+| `hover:bg-primary-hover` | Primary button hover |
+| `bg-accent-soft` / `text-accent-soft-foreground` | Badges, soft highlights |
+
+## Layout
+
+- Page content: `max-w-6xl mx-auto px-6 py-10` (already on `<main>`)
+- Section spacing: `flex flex-col gap-8` between major blocks
+- Page header: `.page-title` + `.page-lead` (or equivalent utilities)
+- Lists: `.list-row` for clickable rows; `.action-card` for marketplace grid items
+- Grids: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3` for action cards
+
+## Components (prefer shared classes from globals.css)
+
+- Primary CTA: `.btn-primary`
+- Secondary / outline: `.btn-secondary`
+- Text inputs: `.input-field`
+- Links: `.link-accent`
+- Panels: `.surface-card` with `p-6`
+
+## Typography
+
+- Font: Geist Sans (already loaded)
+- Page title: `text-3xl font-semibold`
+- Section title: `text-lg font-semibold`
+- Body: default; muted copy uses `text-muted`
+- RTL (Hebrew): rely on existing `dir` on `<html>` — do not override text alignment unless needed
+
+## Do / don't
+
+- ✅ `border-border`, `text-accent`, `bg-surface`, shared component classes
+- ✅ Keep dark mode automatic via CSS variables (no duplicate `dark:` color pairs unless for one-off cases)
+- ❌ Raw `text-blue-900`, `border-blue-100`, `bg-blue-50`, etc.
+- ❌ Inline hex colors in TSX
+
+## Ocean hex reference
+
+Light: bg `#eef4fb`, surface `#ffffff`, text `#0c1929`, primary `#1d4ed8`, accent `#0284c7`  
+Dark: bg `#0c1929`, surface `#132337`, text `#f0f9ff`, primary `#0284c7`, accent `#38bdf8`

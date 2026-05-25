@@ -14,6 +14,7 @@ Full project context: @CONTEXT.md
 - **Zod for all inputs** — validate server action form data with Zod before touching the database.
 - **TypeScript strict** — no `any`, no `@ts-ignore` without an explanatory comment.
 - **Update CONTEXT.md** — after any non-trivial change, update the relevant section of `CONTEXT.md`.
+- **Keep Notion in sync** — when routes, guards/roles, env vars, migrations/RLS, or tenant-level features materially change for operators, update the CPA pages under **Projects → CPA** (e.g. **Project Overview**, **Environment Variables**, **Role Permissions**). Use Notion MCP in Cursor in the **same workflow** as code/CONTEXT updates.
 
 ## Route overview
 

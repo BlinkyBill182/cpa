@@ -24,8 +24,8 @@ export default async function BackofficeTenantsPage({ params, searchParams }: Ba
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold text-blue-900">{dict.ownerTenants.title}</h1>
-        <p className="text-slate-700">{dict.ownerTenants.description}</p>
+        <h1 className="page-title">{dict.ownerTenants.title}</h1>
+        <p className="text-muted">{dict.ownerTenants.description}</p>
       </header>
 
       {error ? (
@@ -40,7 +40,7 @@ export default async function BackofficeTenantsPage({ params, searchParams }: Ba
           <input
             required
             name="name"
-            className="rounded-md border border-blue-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="input-field"
             minLength={2}
           />
         </label>
@@ -50,16 +50,16 @@ export default async function BackofficeTenantsPage({ params, searchParams }: Ba
             <input
               required
               name="slug"
-              className="rounded-md border border-blue-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="input-field"
               pattern="^[a-z0-9-]+$"
             />
           </label>
-          <span className="text-xs text-slate-500">{dict.ownerTenants.slugHint}</span>
+          <span className="text-xs text-muted">{dict.ownerTenants.slugHint}</span>
         </div>
         <div className="md:col-span-2">
           <button
             type="submit"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="btn-primary"
           >
             {dict.ownerTenants.submit}
           </button>
@@ -68,33 +68,33 @@ export default async function BackofficeTenantsPage({ params, searchParams }: Ba
 
       <section className="flex flex-col gap-3">
         {(tenants ?? []).length === 0 ? (
-          <p className="text-slate-700">{dict.ownerTenants.empty}</p>
+          <p className="text-muted">{dict.ownerTenants.empty}</p>
         ) : null}
         {(tenants ?? []).map((tenant) => (
           <article
             key={tenant.id}
-            className="flex items-center justify-between rounded-md border border-blue-100 px-4 py-3"
+            className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3"
           >
             <div>
               <h2 className="font-medium">{tenant.name}</h2>
-              <p className="text-sm text-slate-600">{tenant.slug}</p>
+              <p className="text-sm text-muted">{tenant.slug}</p>
             </div>
             <div className="flex gap-2">
               <a
                 href={`/backoffice/tenants/${tenant.id}/members`}
-                className="rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
+                className="btn-secondary px-3 py-1.5"
               >
                 {dict.ownerTenants.manageMembers}
               </a>
               <a
                 href={`/backoffice/tenants/${tenant.id}/actions`}
-                className="rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
+                className="btn-secondary px-3 py-1.5"
               >
                 {dict.ownerTenants.manageActions}
               </a>
               <a
                 href={`/${tenant.slug}/backoffice`}
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                className="btn-primary px-3 py-1.5 hover:bg-primary-hover"
               >
                 {dict.ownerTenants.openBackoffice}
               </a>

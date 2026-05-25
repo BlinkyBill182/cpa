@@ -15,8 +15,8 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   return (
     <section className="flex w-full max-w-sm flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold text-blue-900">{dict.login.title}</h1>
-        <p className="text-slate-600">{dict.login.description}</p>
+        <h1 className="page-title">{dict.login.title}</h1>
+        <p className="text-muted">{dict.login.description}</p>
       </header>
 
       {currentSearchParams.error ? (
@@ -39,9 +39,9 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
       />
 
       <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-blue-100" />
-        <span className="text-xs text-slate-500">{dict.login.orLabel}</span>
-        <span className="h-px flex-1 bg-blue-100" />
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted">{dict.login.orLabel}</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       <form action={sendMagicLinkAction.bind(null, lang)} className="flex flex-col gap-3">
@@ -51,12 +51,12 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             required
             name="email"
             type="email"
-            className="rounded-md border border-blue-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="input-field"
           />
         </label>
         <button
           type="submit"
-          className="rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
+          className="btn-secondary"
         >
           {dict.login.magicLink}
         </button>

@@ -29,7 +29,7 @@ export const DarkModeToggle = () => {
     <button
       onClick={toggle}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="flex size-8 items-center justify-center rounded-full text-lg transition-colors hover:bg-blue-100 dark:hover:bg-slate-700"
+      className="flex size-8 items-center justify-center rounded-full text-lg transition-colors hover:bg-accent-soft/40"
     >
       {isDark ? "☀️" : "🌙"}
     </button>

@@ -68,17 +68,17 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
     <section className="flex w-full flex-col gap-10">
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <Link href={`/${slug}/clients`} className="text-blue-600 hover:underline">
+          <Link href={`/${slug}/clients`} className="link-accent">
             ← {m.backToClients}
           </Link>
           {role === "tenant_admin" ? (
-            <Link href={`/${slug}/backoffice`} className="text-blue-600 hover:underline">
+            <Link href={`/${slug}/backoffice`} className="link-accent">
               ← {m.backToOfficeBackoffice}
             </Link>
           ) : null}
         </div>
-        <h1 className="text-3xl font-semibold text-blue-900 dark:text-blue-100">{m.title}</h1>
-        <p className="text-slate-700 dark:text-slate-300">{m.description}</p>
+        <h1 className="page-title">{m.title}</h1>
+        <p className="text-muted">{m.description}</p>
       </header>
 
       {banner ? (
@@ -96,14 +96,14 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
       <div className="flex items-center gap-4">
         <Link
           href={showArchived ? `/${slug}/backoffice/clients` : `/${slug}/backoffice/clients?showArchived=1`}
-          className="text-sm text-blue-600 hover:underline"
+          className="link-accent text-sm"
         >
           {showArchived ? m.hideArchived : m.showArchived}
         </Link>
       </div>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-blue-100 p-6 dark:border-slate-700">
-        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">{m.addClient}</h2>
+      <section className="surface-card flex flex-col gap-4 p-6">
+        <h2 className="text-lg font-semibold text-foreground">{m.addClient}</h2>
         <form action={createOfficeClientAction.bind(null, lang, slug)} className="flex max-w-xl flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
             <span>{m.name}</span>
@@ -111,7 +111,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
               required
               name="name"
               type="text"
-              className="rounded-md border border-blue-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+              className="input-field"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -119,21 +119,21 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
             <input
               name="tax_id"
               type="text"
-              className="rounded-md border border-blue-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+              className="input-field"
             />
           </label>
           <button
             type="submit"
-            className="w-fit rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="w-fit btn-primary"
           >
             {m.create}
           </button>
         </form>
       </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-blue-100 p-6 dark:border-slate-700">
-        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">{m.csvImport}</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{m.csvHint}</p>
+      <section className="surface-card flex flex-col gap-4 p-6">
+        <h2 className="text-lg font-semibold text-foreground">{m.csvImport}</h2>
+        <p className="text-sm text-muted">{m.csvHint}</p>
         <form action={importOfficeClientsCsvAction.bind(null, lang, slug)} className="flex max-w-xl flex-col gap-3">
           <input
             required
@@ -144,7 +144,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
           />
           <button
             type="submit"
-            className="w-fit rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-300"
+            className="w-fit btn-secondary"
           >
             {m.csvSubmit}
           </button>
@@ -152,9 +152,9 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100">{m.listHeading}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{m.listHeading}</h2>
         {(clients ?? []).length === 0 ? (
-          <p className="text-slate-500">{m.empty}</p>
+          <p className="text-muted">{m.empty}</p>
         ) : (
           <ul className="flex flex-col gap-6">
             {(clients ?? []).map((client) => {
@@ -162,7 +162,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
               return (
                 <li
                   key={client.id}
-                  className="rounded-lg border border-blue-100 p-4 dark:border-slate-700"
+                  className="surface-card p-4"
                 >
                   <form
                     action={updateOfficeClientAction.bind(null, lang, slug)}
@@ -171,7 +171,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
                     <input type="hidden" name="client_id" value={client.id} />
                     <div className="flex min-w-[200px] flex-1 flex-col gap-1 text-sm">
                       <span>{m.clientId}</span>
-                      <code className="rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-xs dark:border-slate-600 dark:bg-slate-800">
+                      <code className="rounded-md border border-border bg-accent-soft/30 px-2 py-2 text-xs">
                         {client.id}
                       </code>
                     </div>
@@ -182,7 +182,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
                         name="name"
                         type="text"
                         defaultValue={client.name}
-                        className="rounded-md border border-blue-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+                        className="input-field"
                       />
                     </label>
                     <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-sm">
@@ -191,12 +191,12 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
                         name="tax_id"
                         type="text"
                         defaultValue={client.tax_id ?? ""}
-                        className="rounded-md border border-blue-200 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+                        className="input-field"
                       />
                     </label>
                     <button
                       type="submit"
-                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                      className="btn-primary"
                     >
                       {m.save}
                     </button>
@@ -215,7 +215,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
                       </button>
                     </form>
                   ) : (
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-muted">
                       {m.archivedAt}{" "}
                       {client.deleted_at ? new Date(client.deleted_at).toLocaleString() : ""}
                     </p>

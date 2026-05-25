@@ -49,8 +49,8 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold text-blue-900">{dict.ownerMembers.title}</h1>
-        <p className="text-slate-700">
+        <h1 className="page-title">{dict.ownerMembers.title}</h1>
+        <p className="text-muted">
           {dict.ownerMembers.tenantLabel}: {tenant.name}
         </p>
       </header>
@@ -71,12 +71,12 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
             required
             name="email"
             type="email"
-            className="rounded-md border border-blue-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="input-field"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span>{dict.ownerMembers.role}</span>
-          <select name="role" className="rounded-md border border-blue-200 px-3 py-2">
+          <select name="role" className="input-field">
             {tenantRoles.map((role) => (
               <option key={role} value={role}>
                 {role}
@@ -87,7 +87,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
         <div className="md:col-span-3">
           <button
             type="submit"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="btn-primary"
           >
             {dict.ownerMembers.inviteButton}
           </button>
@@ -97,13 +97,13 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">{dict.ownerMembers.membersHeading}</h2>
         {(memberships ?? []).length === 0 ? (
-          <p className="text-slate-700">{dict.ownerMembers.empty}</p>
+          <p className="text-muted">{dict.ownerMembers.empty}</p>
         ) : null}
         {(memberships ?? []).map((membership) => (
-          <article key={membership.user_id} className="rounded-md border border-blue-100 px-4 py-3">
+          <article key={membership.user_id} className="rounded-xl border border-border bg-surface px-4 py-3">
             <div className="mb-3">
               <p className="font-medium">{membership.user_id}</p>
-              <p className="text-sm text-slate-600">{membership.role}</p>
+              <p className="text-sm text-muted">{membership.role}</p>
             </div>
             <div className="flex flex-wrap items-end gap-2">
               <form action={updateMemberRoleAction.bind(null, lang, slug)} className="flex items-end gap-2">
@@ -113,7 +113,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
                   <select
                     name="role"
                     defaultValue={membership.role}
-                    className="rounded-md border border-blue-200 px-2 py-1"
+                    className="input-field px-2 py-1"
                   >
                     {tenantRoles.map((role) => (
                       <option key={role} value={role}>
@@ -124,7 +124,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
                 </label>
                 <button
                   type="submit"
-                  className="rounded-md border border-blue-200 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50"
+                  className="btn-secondary px-3 py-1 text-sm"
                 >
                   {dict.ownerMembers.updateRoleButton}
                 </button>
@@ -148,12 +148,12 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">{dict.ownerMembers.invitationsHeading}</h2>
         {(invitations ?? []).length === 0 ? (
-          <p className="text-slate-700">{dict.ownerMembers.emptyInvitations}</p>
+          <p className="text-muted">{dict.ownerMembers.emptyInvitations}</p>
         ) : null}
         {(invitations ?? []).map((invitation) => (
-          <article key={invitation.id} className="rounded-md border border-blue-100 px-4 py-3">
+          <article key={invitation.id} className="rounded-xl border border-border bg-surface px-4 py-3">
             <p className="font-medium">{invitation.invited_email}</p>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted">
               {invitation.role} — {invitation.status}
             </p>
           </article>
@@ -163,7 +163,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">{dict.ownerMembers.accessRequestsHeading}</h2>
         {(accessRequests ?? []).length === 0 ? (
-          <p className="text-slate-700">{dict.ownerMembers.emptyAccessRequests}</p>
+          <p className="text-muted">{dict.ownerMembers.emptyAccessRequests}</p>
         ) : null}
         {(accessRequests ?? []).map((req) => (
           <article
@@ -172,7 +172,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
           >
             <div className="mb-3">
               <p className="font-medium">{req.email}</p>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted">
                 {dict.ownerMembers.requestedAt}:{" "}
                 {new Date(req.requested_at).toLocaleDateString()}
               </p>
@@ -185,7 +185,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
                 <input type="hidden" name="requestId" value={req.id} />
                 <label className="flex flex-col gap-1 text-sm">
                   <span>{dict.ownerMembers.role}</span>
-                  <select name="role" className="rounded-md border border-blue-200 px-2 py-1">
+                  <select name="role" className="input-field px-2 py-1">
                     {tenantRoles.map((role) => (
                       <option key={role} value={role}>
                         {role}
@@ -195,7 +195,7 @@ export default async function TenantTeamPage({ params, searchParams }: TenantTea
                 </label>
                 <button
                   type="submit"
-                  className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                  className="btn-primary px-3 py-1"
                 >
                   {dict.ownerMembers.approveButton}
                 </button>

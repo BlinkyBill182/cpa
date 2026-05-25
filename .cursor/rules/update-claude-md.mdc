@@ -7,7 +7,9 @@ alwaysApply: true
 
 After any non-trivial change, update the relevant `CLAUDE.md` file(s) **in the same turn** as the code change.
 
-## Trigger conditions
+Also, when substantive project behavior documented for stakeholders changes, update **Notion** under **Projects → CPA** (**Project Overview**, **Environment Variables**, **Role Permissions**, etc.) via Notion MCP—same cadence as `CONTEXT.md` / `CLAUDE.md`, not deferred to a vague “later” hook.
+
+## Trigger conditions (repo markdown)
 
 Update **`src/CLAUDE.md`** when you change:
 - Route structure (add/remove/rename pages or layouts under `src/app/`)

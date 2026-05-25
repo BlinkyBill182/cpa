@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CPA Design Preview — 8 Palettes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: #eef2f6;
+      color: #0f172a;
+      min-height: 100vh;
+    }
+    .toolbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between;
+    }
+    .toolbar h1 { font-size: 15px; font-weight: 600; }
+    .toolbar p { font-size: 12px; color: #64748b; margin-top: 2px; max-width: 520px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; max-width: 720px; justify-content: flex-end; }
+    .tab {
+      border: 1px solid #cbd5e1; background: #fff; color: #334155;
+      padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; cursor: pointer;
+    }
+    .tab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+    .toggle {
+      border: 1px solid #cbd5e1; background: #fff; color: #334155;
+      padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    }
+    .refs { font-size: 12px; color: #64748b; line-height: 1.5; }
+    .refs a { color: #2563eb; text-decoration: none; }
+    .refs a:hover { text-decoration: underline; }
+    .layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; padding: 20px 24px 40px; max-width: 1400px; margin: 0 auto; }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+    .palette-panel {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; height: fit-content;
+    }
+    .palette-panel h2 { font-size: 14px; margin-bottom: 4px; }
+    .palette-panel .subtitle { font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.45; }
+    .swatches { display: grid; gap: 8px; }
+    .swatch { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+    .swatch i { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(0,0,0,.06); flex-shrink: 0; }
+    .swatch code { color: #64748b; font-size: 11px; }
+    .preview-shell {
+      border-radius: 20px; overflow: hidden; border: 1px solid #cbd5e1;
+      box-shadow: 0 24px 60px rgba(15,23,42,.12);
+      min-height: 720px;
+      font-family: var(--font-family, Inter, sans-serif);
+      background: var(--bg);
+      color: var(--text);
+      transition: background .2s, color .2s, border-color .2s, box-shadow .2s;
+    }
+    .preview-shell.is-dark { border-color: #334155; box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+
+    /* Theme tokens — light mode */
+    .preview-shell[data-theme="a"] {
+      --font-family: Geist, Inter, sans-serif;
+      --bg: #fafafa; --surface: #ffffff; --text: #18181b; --muted: #71717a;
+      --border: #e4e4e7; --brand: #18181b; --link: #6366f1; --primary: #18181b; --primary-fg: #fafafa;
+      --badge-bg: #eef2ff; --badge-fg: #4338ca; --hover-border: #c7d2fe; --hover-shadow: rgba(99,102,241,.08);
+      --nav-bg: rgba(250,250,250,.85); --row-hover-bg: #ffffff; --card-gradient: none; --radius-row: 12px; --radius-card: 14px;
+    }
+    .preview-shell[data-theme="b"] {
+      --bg: #f4f7fb; --surface: #ffffff; --text: #0b1f33; --muted: #5b7086;
+      --border: #dbe4ef; --brand: #0b3d5c; --link: #0d9488; --primary: #0b3d5c; --primary-fg: #ffffff;
+      --badge-bg: #ecfdf5; --badge-fg: #0f766e; --hover-border: #5eead4; --hover-shadow: rgba(13,148,136,.1);
+      --nav-bg: #ffffff; --row-hover-bg: #ffffff; --card-gradient: none; --radius-row: 12px; --radius-card: 14px;
+    }
+    .preview-shell[data-theme="c"] {
+      --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --muted: #64748b;
+      --border: #e2e8f0; --brand: #1d4ed8; --link: #2563eb; --primary: #2563eb; --primary-fg: #ffffff;
+      --badge-bg: #eff6ff; --badge-fg: #1d4ed8; --hover-border: #93c5fd; --hover-shadow: rgba(37,99,235,.12);
+      --nav-bg: #ffffff; --row-hover-bg: #f8fbff; --card-gradient: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+      --radius-row: 14px; --radius-card: 16px;
+    }
+    .preview-shell[data-theme="d"] {
+      --bg: #f7f5f2; --surface: #ffffff; --text: #1c1917; --muted: #78716c;
+      --border: #e7e5e4; --brand: #292524; --link: #b45309; --primary: #92400e; --primary-fg: #fffbeb;
+      --badge-bg: #fef3c7; --badge-fg: #92400e; --hover-border: #fcd34d; --hover-shadow: rgba(180,83,9,.1);
+      --nav-bg: #ffffff; --row-hover-bg: #fffbeb; --card-gradient: none; --radius-row: 12px; --radius-card: 14px;
+    }
+    .preview-shell[data-theme="e"] {
+      --bg: #f3f6f4; --surface: #ffffff; --text: #1a2e1f; --muted: #5f7264;
+      --border: #d8e3dc; --brand: #166534; --link: #059669; --primary: #166534; --primary-fg: #ffffff;
+      --badge-bg: #ecfdf5; --badge-fg: #047857; --hover-border: #6ee7b7; --hover-shadow: rgba(5,150,105,.1);
+      --nav-bg: #ffffff; --row-hover-bg: #f0fdf4; --card-gradient: none; --radius-row: 12px; --radius-card: 14px;
+    }
+    .preview-shell[data-theme="f"] {
+      --bg: #f5f3ff; --surface: #ffffff; --text: #1e1b4b; --muted: #6b7280;
+      --border: #e9d5ff; --brand: #5b21b6; --link: #7c3aed; --primary: #6d28d9; --primary-fg: #ffffff;
+      --badge-bg: #ede9fe; --badge-fg: #5b21b6; --hover-border: #c4b5fd; --hover-shadow: rgba(109,40,217,.12);
+      --nav-bg: #ffffff; --row-hover-bg: #faf5ff; --card-gradient: none; --radius-row: 12px; --radius-card: 14px;
+    }
+    .preview-shell[data-theme="g"] {
+      --bg: #fff1f2; --surface: #ffffff; --text: #1f2937; --muted: #6b7280;
+      --border: #fecdd3; --brand: #be123c; --link: #e11d48; --primary: #e11d48; --primary-fg: #ffffff;
+      --badge-bg: #ffe4e6; --badge-fg: #be123c; --hover-border: #fda4af; --hover-shadow: rgba(225,29,72,.1);
+      --nav-bg: #ffffff; --row-hover-bg: #fff1f2; --card-gradient: none; --radius-row: 14px; --radius-card: 16px;
+    }
+    .preview-shell[data-theme="h"] {
+      --bg: #eef4fb; --surface: #ffffff; --text: #0c1929; --muted: #5a6b7d;
+      --border: #c8d9eb; --brand: #1e40af; --link: #0284c7; --primary: #1d4ed8; --primary-fg: #ffffff;
+      --badge-bg: #e0f2fe; --badge-fg: #0369a1; --hover-border: #7dd3fc; --hover-shadow: rgba(2,132,199,.12);
+      --nav-bg: #ffffff; --row-hover-bg: #f0f9ff; --card-gradient: none; --radius-row: 12px; --radius-card: 14px;
+    }
+
+    /* Dark mode overrides per theme */
+    .preview-shell.is-dark[data-theme="a"] {
+      --bg: #09090b; --surface: #18181b; --text: #fafafa; --muted: #a1a1aa;
+      --border: #27272a; --brand: #fafafa; --link: #a5b4fc; --primary: #fafafa; --primary-fg: #18181b;
+      --badge-bg: #312e81; --badge-fg: #c7d2fe; --nav-bg: rgba(9,9,11,.9); --row-hover-bg: #18181b;
+    }
+    .preview-shell.is-dark[data-theme="b"] {
+      --bg: #071422; --surface: #0b1f33; --text: #f1f5f9; --muted: #94a3b8;
+      --border: #1e3a52; --brand: #e2e8f0; --link: #2dd4bf; --primary: #0d9488; --primary-fg: #ffffff;
+      --badge-bg: #134e4a; --badge-fg: #99f6e4; --nav-bg: #0b1f33; --row-hover-bg: #0b1f33;
+    }
+    .preview-shell.is-dark[data-theme="c"] {
+      --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --muted: #94a3b8;
+      --border: #334155; --brand: #93c5fd; --link: #60a5fa; --primary: #2563eb; --primary-fg: #ffffff;
+      --badge-bg: #1e3a8a; --badge-fg: #bfdbfe; --nav-bg: #1e293b; --row-hover-bg: #1e293b; --card-gradient: none;
+    }
+    .preview-shell.is-dark[data-theme="d"] {
+      --bg: #1c1917; --surface: #292524; --text: #fafaf9; --muted: #a8a29e;
+      --border: #44403c; --brand: #fafaf9; --link: #fbbf24; --primary: #d97706; --primary-fg: #1c1917;
+      --badge-bg: #78350f; --badge-fg: #fde68a; --nav-bg: #292524; --row-hover-bg: #292524;
+    }
+    .preview-shell.is-dark[data-theme="e"] {
+      --bg: #0f1a14; --surface: #1a2e22; --text: #ecfdf5; --muted: #86efac;
+      --border: #2d4a38; --brand: #bbf7d0; --link: #34d399; --primary: #059669; --primary-fg: #ffffff;
+      --badge-bg: #064e3b; --badge-fg: #a7f3d0; --nav-bg: #1a2e22; --row-hover-bg: #1a2e22;
+    }
+    .preview-shell.is-dark[data-theme="f"] {
+      --bg: #1e1b4b; --surface: #312e81; --text: #f5f3ff; --muted: #c4b5fd;
+      --border: #4c1d95; --brand: #ddd6fe; --link: #a78bfa; --primary: #7c3aed; --primary-fg: #ffffff;
+      --badge-bg: #4c1d95; --badge-fg: #ddd6fe; --nav-bg: #312e81; --row-hover-bg: #312e81;
+    }
+    .preview-shell.is-dark[data-theme="g"] {
+      --bg: #1f1418; --surface: #3f1d2b; --text: #fff1f2; --muted: #fda4af;
+      --border: #881337; --brand: #fecdd3; --link: #fb7185; --primary: #e11d48; --primary-fg: #ffffff;
+      --badge-bg: #881337; --badge-fg: #fecdd3; --nav-bg: #3f1d2b; --row-hover-bg: #3f1d2b;
+    }
+    .preview-shell.is-dark[data-theme="h"] {
+      --bg: #0c1929; --surface: #132337; --text: #f0f9ff; --muted: #7dd3fc;
+      --border: #1e3a5f; --brand: #bae6fd; --link: #38bdf8; --primary: #0284c7; --primary-fg: #ffffff;
+      --badge-bg: #0c4a6e; --badge-fg: #bae6fd; --nav-bg: #132337; --row-hover-bg: #132337;
+    }
+
+    .mock-nav, .mock-main { padding-left: 24px; padding-right: 24px; }
+    .mock-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 14px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--nav-bg);
+    }
+    .mock-brand { font-weight: 600; font-size: 15px; text-decoration: none; color: var(--brand); }
+    .mock-nav-links { display: flex; gap: 16px; align-items: center; font-size: 13px; }
+    .mock-nav-links a, .mock-nav-links button {
+      background: none; border: none; cursor: pointer; font: inherit; text-decoration: none; color: var(--muted);
+    }
+    .mock-nav-links a:hover, .mock-nav-links button:hover { color: var(--text); }
+    .mock-main { padding-top: 28px; padding-bottom: 36px; max-width: 960px; margin: 0 auto; }
+    .mock-breadcrumb { font-size: 13px; margin-bottom: 10px; text-decoration: none; display: inline-block; color: var(--link); }
+    .mock-title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; color: var(--text); }
+    .mock-sub { font-size: 14px; margin-bottom: 22px; line-height: 1.5; color: var(--muted); }
+    .mock-section-title {
+      font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+      margin: 24px 0 12px; color: var(--muted); opacity: .85;
+    }
+    .client-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .client-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 14px 16px; border-radius: var(--radius-row);
+      border: 1px solid var(--border); background: var(--surface);
+      text-decoration: none; transition: background .15s, border-color .15s, box-shadow .15s, transform .15s;
+    }
+    .client-row:hover {
+      background: var(--row-hover-bg); border-color: var(--hover-border);
+      box-shadow: 0 10px 28px var(--hover-shadow); transform: translateY(-1px);
+    }
+    .client-name { font-weight: 600; font-size: 15px; color: var(--text); }
+    .client-meta { font-size: 12px; margin-top: 2px; color: var(--muted); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none;
+      background: var(--primary); color: var(--primary-fg); white-space: nowrap;
+    }
+    .btn-secondary {
+      padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer;
+    }
+    .action-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+    @media (max-width: 900px) { .action-grid { grid-template-columns: 1fr; } }
+    .action-card {
+      border-radius: var(--radius-card); border: 1px solid var(--border);
+      background: var(--card-gradient, var(--surface)); padding: 18px;
+      display: flex; flex-direction: column; gap: 10px; min-height: 170px;
+      transition: box-shadow .15s, border-color .15s, transform .15s;
+    }
+    .action-card:hover {
+      border-color: var(--hover-border); box-shadow: 0 14px 34px var(--hover-shadow); transform: translateY(-2px);
+    }
+    .action-icon { font-size: 28px; line-height: 1; }
+    .action-title { font-weight: 600; font-size: 15px; color: var(--text); }
+    .action-desc { font-size: 12px; line-height: 1.45; flex: 1; color: var(--muted); }
+    .badge {
+      display: inline-flex; font-size: 11px; font-weight: 600;
+      padding: 4px 8px; border-radius: 999px; width: fit-content;
+      background: var(--badge-bg); color: var(--badge-fg);
+    }
+    html[dir="rtl"] .mock-nav, html[dir="rtl"] .client-row { direction: rtl; }
+    html[dir="rtl"] .mock-main { text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <h1>CPA design directions — 8 palettes</h1>
+      <p>Same CPA screens, different color systems. Switch tabs, toggle dark mode and RTL, then tell me which letter(s) you like.</p>
+    </div>
+    <div class="controls">
+      <button class="tab active" data-tab="a">A · Minimal</button>
+      <button class="tab" data-tab="b">B · Finance</button>
+      <button class="tab" data-tab="c">C · Friendly</button>
+      <button class="tab" data-tab="d">D · Executive</button>
+      <button class="tab" data-tab="e">E · Sage</button>
+      <button class="tab" data-tab="f">F · Violet</button>
+      <button class="tab" data-tab="g">G · Rose</button>
+      <button class="tab" data-tab="h">H · Ocean</button>
+      <button class="toggle" id="rtlToggle">Toggle RTL (Hebrew)</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="palette-panel" id="palettePanel">
+      <h2 id="paletteTitle">A — Refined minimal</h2>
+      <p class="subtitle" id="paletteDesc"></p>
+      <div class="swatches" id="swatches"></div>
+      <p class="refs" style="margin-top:16px" id="refs"></p>
+    </aside>
+
+    <div class="preview-shell" id="previewShell" data-theme="a">
+      <header class="mock-nav">
+        <a class="mock-brand" href="#">CPA Platform</a>
+        <div class="mock-nav-links">
+          <a href="#">Backoffice</a>
+          <button type="button">Logout</button>
+          <button class="btn-secondary theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
+        </div>
+      </header>
+      <main class="mock-main">
+        <a class="mock-breadcrumb" href="#">← Clients</a>
+        <h1 class="mock-title">Cohen &amp; Partners Ltd.</h1>
+        <p class="mock-sub">Company no. 512345678 · Choose an action to run for this client.</p>
+        <div class="badge">3 actions enabled</div>
+
+        <p class="mock-section-title">Recent clients</p>
+        <div class="client-list">
+          <a class="client-row" href="#">
+            <div>
+              <div class="client-name">Levi Accounting</div>
+              <div class="client-meta">Company no. 515551234</div>
+            </div>
+            <span class="btn">View actions</span>
+          </a>
+          <a class="client-row" href="#">
+            <div>
+              <div class="client-name">Shira Tech Solutions</div>
+              <div class="client-meta">Company no. 516667890</div>
+            </div>
+            <span class="btn">View actions</span>
+          </a>
+        </div>
+
+        <p class="mock-section-title">Action marketplace</p>
+        <div class="action-grid">
+          <article class="action-card">
+            <div class="action-icon">📄</div>
+            <div class="action-title">Annual report</div>
+            <div class="action-desc">Generate and review the yearly filing package for this client.</div>
+            <span class="btn">Run</span>
+          </article>
+          <article class="action-card">
+            <div class="action-icon">📊</div>
+            <div class="action-title">VAT reconciliation</div>
+            <div class="action-desc">Compare submitted VAT periods against ledger entries.</div>
+            <span class="btn">Run</span>
+          </article>
+          <article class="action-card">
+            <div class="action-icon">✉️</div>
+            <div class="action-title">Client reminder</div>
+            <div class="action-desc">Send a templated email for missing documents.</div>
+            <span class="btn">Run</span>
+          </article>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const themes = {
+      a: {
+        title: "A — Refined minimal",
+        desc: "Crisp zinc neutrals + indigo accent. Linear / Stripe dashboard feel.",
+        refs: "<a href='https://linear.app' target='_blank' rel='noreferrer'>linear.app</a>, <a href='https://stripe.com' target='_blank' rel='noreferrer'>stripe.com</a>",
+        swatches: [["Background","#fafafa"],["Surface","#ffffff"],["Text","#18181b"],["Muted","#71717a"],["Border","#e4e4e7"],["Primary","#18181b"],["Accent","#6366f1"],["Badge","#eef2ff"]],
+      },
+      b: {
+        title: "B — Finance & trust",
+        desc: "Navy + teal. Strong fit for CPA — credible and calm.",
+        refs: "<a href='https://mercury.com' target='_blank' rel='noreferrer'>mercury.com</a>, <a href='https://ramp.com' target='_blank' rel='noreferrer'>ramp.com</a>",
+        swatches: [["Background","#f4f7fb"],["Surface","#ffffff"],["Text","#0b1f33"],["Muted","#5b7086"],["Border","#dbe4ef"],["Primary","#0b3d5c"],["Accent","#0d9488"],["Badge","#ecfdf5"]],
+      },
+      c: {
+        title: "C — Friendly SaaS",
+        desc: "Soft slate + blue. Approachable, polished — closest to your current app.",
+        refs: "<a href='https://attio.com' target='_blank' rel='noreferrer'>attio.com</a>, <a href='https://clerk.com' target='_blank' rel='noreferrer'>clerk.com</a>",
+        swatches: [["Background","#f8fafc"],["Surface","#ffffff"],["Text","#0f172a"],["Muted","#64748b"],["Border","#e2e8f0"],["Primary","#2563eb"],["Accent","#1d4ed8"],["Badge","#eff6ff"]],
+      },
+      d: {
+        title: "D — Executive warm",
+        desc: "Stone + amber. Premium advisory firm — serious but not cold.",
+        refs: "<a href='https://www.bain.com' target='_blank' rel='noreferrer'>bain.com</a>, <a href='https://www.mckinsey.com' target='_blank' rel='noreferrer'>mckinsey.com</a> (tone reference)",
+        swatches: [["Background","#f7f5f2"],["Surface","#ffffff"],["Text","#1c1917"],["Muted","#78716c"],["Border","#e7e5e4"],["Primary","#92400e"],["Accent","#b45309"],["Badge","#fef3c7"]],
+      },
+      e: {
+        title: "E — Sage green",
+        desc: "Forest + emerald. Calm, trustworthy — good for long work sessions.",
+        refs: "<a href='https://wise.com' target='_blank' rel='noreferrer'>wise.com</a>, <a href='https://www.notion.so' target='_blank' rel='noreferrer'>notion.so</a> (green accents)",
+        swatches: [["Background","#f3f6f4"],["Surface","#ffffff"],["Text","#1a2e1f"],["Muted","#5f7264"],["Border","#d8e3dc"],["Primary","#166534"],["Accent","#059669"],["Badge","#ecfdf5"]],
+      },
+      f: {
+        title: "F — Violet enterprise",
+        desc: "Soft purple + violet. Modern enterprise SaaS, distinctive without feeling playful.",
+        refs: "<a href='https://www.notion.so/product' target='_blank' rel='noreferrer'>notion.so</a>, <a href='https://vercel.com' target='_blank' rel='noreferrer'>vercel.com</a>",
+        swatches: [["Background","#f5f3ff"],["Surface","#ffffff"],["Text","#1e1b4b"],["Muted","#6b7280"],["Border","#e9d5ff"],["Primary","#6d28d9"],["Accent","#7c3aed"],["Badge","#ede9fe"]],
+      },
+      g: {
+        title: "G — Rose modern",
+        desc: "Warm rose + coral primary. Bold and memorable — use if you want to stand out.",
+        refs: "<a href='https://dribbble.com/tags/saas_dashboard' target='_blank' rel='noreferrer'>dribbble SaaS dashboards</a> (modern rose trend)",
+        swatches: [["Background","#fff1f2"],["Surface","#ffffff"],["Text","#1f2937"],["Muted","#6b7280"],["Border","#fecdd3"],["Primary","#e11d48"],["Accent","#be123c"],["Badge","#ffe4e6"]],
+      },
+      h: {
+        title: "H — Ocean corporate",
+        desc: "Classic deep blue + sky accent. Traditional corporate SaaS — safe and familiar.",
+        refs: "<a href='https://www.salesforce.com' target='_blank' rel='noreferrer'>salesforce.com</a>, <a href='https://www.microsoft.com/microsoft-365' target='_blank' rel='noreferrer'>Microsoft 365</a>",
+        swatches: [["Background","#eef4fb"],["Surface","#ffffff"],["Text","#0c1929"],["Muted","#5a6b7d"],["Border","#c8d9eb"],["Primary","#1d4ed8"],["Accent","#0284c7"],["Badge","#e0f2fe"]],
+      },
+    };
+
+    const previewShell = document.getElementById("previewShell");
+    const tabs = document.querySelectorAll(".tab");
+
+    function renderPalette(key) {
+      const t = themes[key];
+      document.getElementById("paletteTitle").textContent = t.title;
+      document.getElementById("paletteDesc").textContent = t.desc;
+      document.getElementById("refs").innerHTML = "Live refs: " + t.refs;
+      document.getElementById("swatches").innerHTML = t.swatches.map(([label, hex]) =>
+        `<div class="swatch"><i style="background:${hex}"></i><div><strong>${label}</strong><br><code>${hex}</code></div></div>`
+      ).join("");
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const key = tab.dataset.tab;
+        tabs.forEach((t) => t.classList.toggle("active", t === tab));
+        previewShell.dataset.theme = key;
+        renderPalette(key);
+      });
+    });
+
+    document.getElementById("rtlToggle").addEventListener("click", () => {
+      const rtl = document.documentElement.getAttribute("dir") === "rtl";
+      document.documentElement.setAttribute("dir", rtl ? "ltr" : "rtl");
+      document.getElementById("rtlToggle").textContent = rtl ? "Toggle RTL (Hebrew)" : "Toggle LTR (English)";
+    });
+
+    let previewDark = false;
+    document.querySelector(".theme-toggle").addEventListener("click", () => {
+      previewDark = !previewDark;
+      previewShell.classList.toggle("is-dark", previewDark);
+      const toggle = document.querySelector(".theme-toggle");
+      toggle.textContent = previewDark ? "☀️" : "🌙";
+      toggle.setAttribute("aria-label", previewDark ? "Switch to light mode" : "Switch to dark mode");
+    });
+
+    renderPalette("a");
+  </script>
+</body>
+</html>
