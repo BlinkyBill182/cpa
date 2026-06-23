@@ -2,15 +2,16 @@ import { describe, expect, it } from "vitest";
 import { ACTIVE_TENANT_COOKIE, tenantRoles } from "@/lib/auth/constants";
 
 describe("tenantRoles", () => {
-  it("contains the four expected roles", () => {
+  it("contains the expected roles", () => {
     expect(tenantRoles).toContain("tenant_admin");
     expect(tenantRoles).toContain("manager");
     expect(tenantRoles).toContain("staff");
     expect(tenantRoles).toContain("reviewer");
+    expect(tenantRoles).toContain("contractor");
   });
 
-  it("has exactly four roles", () => {
-    expect(tenantRoles).toHaveLength(4);
+  it("has exactly five roles", () => {
+    expect(tenantRoles).toHaveLength(5);
   });
 
   it("does not include unexpected roles", () => {

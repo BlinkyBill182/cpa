@@ -154,6 +154,11 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 | `office_action_configs` | Which actions are enabled per CPA office. Unique `(tenant_id, action_key)`. Platform owner writes; tenant members read. |
 | `workflow_runs` | Reserved for future automation/CRON tracking. |
 | `audit_logs` | Immutable event log. Written via `logAuditEvent()`. Never mutated. |
+| `document_types` | Tenant-scoped annual-income document library. Tenant admins write; tenant members read. |
+| `client_years` | Per-client annual-income workflow state for a tax year. Manager/admin writes; assigned contractors can update report status only. |
+| `client_year_documents` | Required/custom documents for a `client_years` row. Manager/admin writes; assigned contractors can add documents. |
+| `uploaded_files` | Metadata for files uploaded directly to Google Drive through the upload API. Tenant members read; service-role API writes. |
+| `tenant_secrets` | Tenant-scoped integration secrets such as Google Drive OAuth refresh tokens. Platform owner and tenant admins only. |
 
 ### RLS Policy Summary
 
@@ -165,12 +170,17 @@ All tables live in the `public` schema with RLS enabled. Migrations are in `supa
 - **`office_clients`, `seasonal_income_records`**: Tenant members only see rows for their own tenant.
 - **`office_action_configs`**: Platform owner has full CRUD. Tenant members read-only for their own tenant.
 - **`audit_logs`**: Insert-only for authenticated users; no update/delete.
+- **`document_types`**: Tenant members can read active library entries for their tenant. Tenant admins and platform owners write.
+- **`client_years` / `client_year_documents`**: Tenant members read their tenant rows. Manager/admin write annual-income workflow state; assigned contractors can only perform the report/document updates allowed by DB policies and triggers.
+- **`uploaded_files`**: Tenant members read metadata through scoped joins. Browser-authenticated users have no direct write policy; the upload API writes with the service-role client after validating the upload JWT and document ownership.
+- **`tenant_secrets`**: Platform owners and tenant admins can manage tenant integration secrets.
 
 ### Helper DB Functions
 
 - `is_platform_owner(uid uuid)` — returns `true` if the given user has `profiles.is_platform_owner = true`; called as `is_platform_owner(auth.uid())` in RLS policies
 - `has_tenant_access(tid uuid)` — returns `true` if the calling user has a row in `tenant_memberships` for `tid`
 - `is_tenant_admin(tid uuid)` — returns `true` if the calling user has `role = 'tenant_admin'` for `tid`
+- `can_manage_document_collection(tid uuid)` — returns `true` for `tenant_admin` or `manager`; used by annual-income workflow RLS policies
 
 ---
 
@@ -238,6 +248,7 @@ Tenant-scoped (stored in `tenant_memberships.role`):
 - `manager` — operational access
 - `staff` — standard employee access
 - `reviewer` — read-only access
+- `contractor` — external annual-income reviewer; can update report status only for assigned client years
 
 ---
 
@@ -274,6 +285,9 @@ Tenant-scoped (stored in `tenant_memberships.role`):
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only, bypasses RLS) |
 | `NEXT_PUBLIC_SITE_URL` | Full public URL of the app (e.g. `https://cpa.yourdomain.com`) |
+| `GOOGLE_OAUTH_CLIENT_ID` | Google OAuth client ID for tenant Drive connections |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth client secret; also signs short-lived OAuth `state` tokens |
+| `UPLOAD_JWT_SECRET` | HS256 secret for 90-day client upload portal tokens |
 
 ### Test (`.env.test`) — gitignored, see `.env.test.example`
 
