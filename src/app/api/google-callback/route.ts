@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { verifyGoogleOAuthState } from "@/lib/google-oauth-state";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
@@ -17,13 +18,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${siteUrl}/?drive_error=missing_params`);
   }
 
-  let state: { tenantId: string; returnTo: string };
-  try {
-    state = JSON.parse(Buffer.from(stateParam, "base64url").toString()) as {
-      tenantId: string;
-      returnTo: string;
-    };
-  } catch {
+  const state = await verifyGoogleOAuthState(stateParam);
+  if (!state) {
     return NextResponse.redirect(`${siteUrl}/?drive_error=invalid_state`);
   }
 

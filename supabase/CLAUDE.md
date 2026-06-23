@@ -16,13 +16,14 @@
 is_platform_owner(uid uuid)   -- true if profiles.is_platform_owner = true for the given uid; call as is_platform_owner(auth.uid())
 has_tenant_access(tid uuid)   -- true if user has a row in tenant_memberships for tid
 is_tenant_admin(tid uuid)     -- true if user has role = 'tenant_admin' for tid  (added in migration 0012)
+can_manage_document_collection(tid uuid) -- true for tenant_admin or manager (added in migration 0015)
 ```
 
 ## tenant_role enum values
 
 `tenant_admin` | `manager` | `staff` | `reviewer` | `contractor`
 
-`contractor` was added in migration 0012. Contractors can change `report_status` only for `client_years` where they are the assigned `contractor_id`.
+`contractor` was added in migration 0012. Contractors can change `report_status` only for `client_years` where they are the assigned `contractor_id`; migration 0015 enforces that column scope with a trigger.
 
 ## Applying migrations
 

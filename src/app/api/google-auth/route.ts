@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requirePlatformOwner } from "@/lib/auth/session";
+import { normalizeGoogleOAuthReturnTo, signGoogleOAuthState } from "@/lib/google-oauth-state";
 
 export async function GET(request: NextRequest) {
   await requirePlatformOwner();
 
   const tenantId = request.nextUrl.searchParams.get("tenantId");
-  const returnTo = request.nextUrl.searchParams.get("returnTo") ?? "/";
+  const returnTo = normalizeGoogleOAuthReturnTo(request.nextUrl.searchParams.get("returnTo"));
 
   if (!tenantId) return NextResponse.json({ error: "Missing tenantId" }, { status: 400 });
 
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   if (!clientId) return NextResponse.json({ error: "GOOGLE_OAUTH_CLIENT_ID not configured" }, { status: 500 });
+  if (!clientSecret) return NextResponse.json({ error: "GOOGLE_OAUTH_CLIENT_SECRET not configured" }, { status: 500 });
 
-  const state = Buffer.from(JSON.stringify({ tenantId, returnTo })).toString("base64url");
+  const state = await signGoogleOAuthState({ tenantId, returnTo });
 
   const params = new URLSearchParams({
     client_id: clientId,
