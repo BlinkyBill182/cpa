@@ -85,11 +85,11 @@ export const requireTenantAdminBySlug = async (_locale: string, slug: string) =>
   return access;
 };
 
-/** Tenant admin, manager, or platform owner (via tenant_admin role in access). */
+/** Tenant admin or manager (or platform owner). Blocks staff, reviewer, and contractor. */
 export const requireTenantManagerOrAdminBySlug = async (_locale: string, slug: string) => {
   const access = await requireTenantAccessBySlug(_locale, slug);
 
-  if (access.role === "staff" || access.role === "reviewer") {
+  if (access.role === "staff" || access.role === "reviewer" || access.role === "contractor") {
     redirect(`/?error=forbidden`);
   }
 

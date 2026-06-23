@@ -12,6 +12,11 @@ const toggleSchema = z.object({
   isEnabled: z.enum(["true", "false"]).transform((v) => v === "true"),
 });
 
+const saveConfigSchema = z.object({
+  actionKey: z.string().min(1),
+  drive_folder_id: z.string().trim().max(300).optional().nullable(),
+});
+
 export const toggleActionAction = async (
   _lang: string,
   tenantId: string,
@@ -51,6 +56,45 @@ export const toggleActionAction = async (
     actorUserId: user.id,
     tenantId,
     payload: { actionKey, isEnabled },
+  });
+
+  revalidatePath(`/backoffice/tenants/${tenantId}/actions`);
+};
+
+export const saveActionConfigAction = async (
+  _lang: string,
+  tenantId: string,
+  formData: FormData,
+) => {
+  const user = await requirePlatformOwner();
+
+  const parsed = saveConfigSchema.safeParse({
+    actionKey: formData.get("actionKey"),
+    drive_folder_id: formData.get("drive_folder_id") || null,
+  });
+
+  if (!parsed.success) return;
+
+  const { actionKey, drive_folder_id } = parsed.data;
+
+  const config: Record<string, string | null> = {};
+  if (drive_folder_id !== undefined) config.drive_folder_id = drive_folder_id;
+
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("office_action_configs")
+    .update({ config, updated_at: new Date().toISOString() })
+    .eq("tenant_id", tenantId)
+    .eq("action_key", actionKey);
+
+  if (error) return;
+
+  await logAuditEvent({
+    action: "office_action.config_saved",
+    actorUserId: user.id,
+    tenantId,
+    payload: { actionKey, drive_folder_id },
   });
 
   revalidatePath(`/backoffice/tenants/${tenantId}/actions`);

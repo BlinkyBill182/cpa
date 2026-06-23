@@ -47,7 +47,17 @@
     "disable": "Disable",
     "noActions": "No actions defined.",
     "backToTenants": "Back to tenants",
-    "error": "Action failed. Please try again."
+    "error": "Action failed. Please try again.",
+    "driveConfig": "Google Drive configuration",
+    "driveFolderIdLabel": "Google Drive root folder ID",
+    "saveConfig": "Save configuration",
+    "driveConnect": "Connect Google Drive",
+    "driveConnected": "Google Drive connected",
+    "driveConnectDescription": "Authorize this office to upload files to your Google Drive.",
+    "driveConnectedDescription": "Files will be uploaded to the configured Drive folder using this account.",
+    "driveReconnect": "Reconnect",
+    "driveConnectSuccess": "Google Drive connected successfully.",
+    "driveConnectError": "Failed to connect Google Drive. Please try again."
   },
   "clients": {
     "title": "Clients",
@@ -57,7 +67,15 @@
     "companyNumber": "Company / registration number",
     "clientId": "Client ID",
     "manageClients": "Manage clients",
-    "viewActions": "Run an action"
+    "viewActions": "Run an action",
+    "email": "Email",
+    "phone": "Phone",
+    "activeProcesses": "Active processes",
+    "noActiveProcesses": "No active processes.",
+    "viewProcess": "Manage",
+    "uploadPortalLink": "Client upload link",
+    "bookkeepingStatus": "Bookkeeping",
+    "reportStatus": "Report"
   },
   "clientManage": {
     "title": "Manage clients",
@@ -89,7 +107,11 @@
     "importComplete": "Import finished.",
     "importAdded": "Added",
     "importUpdated": "Updated",
-    "importSkipped": "Skipped"
+    "importSkipped": "Skipped",
+    "email": "Email",
+    "phone": "Phone",
+    "firstName": "First name",
+    "lastName": "Last name"
   },
   "actions": {
     "marketplace": {
@@ -103,7 +125,62 @@
     },
     "annualIncomeSummary": {
       "title": "Annual Income Summary",
-      "description": "Generate an annual income summary report for this client."
+      "dashboardTitle": "Annual Income Summary — All Clients",
+      "dashboardDescription": "Document collection status for all active clients.",
+      "clientColumn": "Client",
+      "bookkeepingColumn": "Bookkeeping",
+      "reportColumn": "Report",
+      "docsColumn": "Docs",
+      "openButton": "Open",
+      "description": "Manage the annual document collection process for this client.",
+      "yearLabel": "Tax year",
+      "noRecord": "No record started for this year.",
+      "startProcess": "Start process",
+      "accounting": {
+        "label": "Bookkeeping status",
+        "inProgress": "In progress",
+        "readyMissing": "Ready — awaiting client docs",
+        "readyForReview": "Ready for contractor",
+        "issue": "Issue",
+        "skip": "Skip client"
+      },
+      "report": {
+        "label": "Report status",
+        "notStarted": "Not started",
+        "readyMissing": "Missing — needs action",
+        "missingCompleted": "Missing docs resolved",
+        "readyForCheck": "Ready for review",
+        "issue": "Issue",
+        "readyForSignature": "Ready for signature",
+        "submitted": "Submitted"
+      },
+      "accountant": "Accountant",
+      "contractor": "Contractor",
+      "assignContractor": "Assign contractor",
+      "notAssigned": "Not assigned",
+      "issueNotes": "Issue notes",
+      "saveStatus": "Update status",
+      "documents": {
+        "title": "Required documents",
+        "empty": "No documents defined for this year.",
+        "addFromList": "Add from standard list",
+        "addCustom": "Add custom document",
+        "selectDocType": "Select a document type",
+        "customNameLabel": "Document name",
+        "freeTextLabel": "Additional notes (optional)",
+        "requiredLabel": "Required",
+        "optionalLabel": "Optional",
+        "clientMarkedNone": "Client marked N/A",
+        "noneReason": "Reason",
+        "add": "Add",
+        "remove": "Remove"
+      },
+      "errors": {
+        "createFailed": "Could not start the process. Please try again.",
+        "statusFailed": "Could not update status. Please try again.",
+        "docAddFailed": "Could not add document.",
+        "docRemoveFailed": "Could not remove document."
+      }
     },
     "documentRequest": {
       "title": "Request a Document",
@@ -153,6 +230,26 @@
     "role": "Your role",
     "teamLink": "Manage team",
     "manageClients": "Manage clients",
-    "viewClientList": "Client list"
+    "viewClientList": "Client list",
+    "documentTypesLink": "Document types",
+    "annualIncomeLink": "Annual income summary"
+  },
+  "documentTypes": {
+    "title": "Document types",
+    "description": "Manage the standard document library for this office.",
+    "backToBackoffice": "Back to backoffice",
+    "name": "Document name",
+    "allowedFormats": "Allowed formats (comma-separated, e.g. PDF, JPEG, XLS)",
+    "isActive": "Active",
+    "add": "Add document type",
+    "save": "Save",
+    "deactivate": "Deactivate",
+    "activate": "Reactivate",
+    "empty": "No document types defined yet.",
+    "listHeading": "Existing document types",
+    "formats": "Formats",
+    "errorSave": "Could not save. Please try again.",
+    "successCreated": "Document type created.",
+    "successUpdated": "Document type updated."
   }
 }

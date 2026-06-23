@@ -19,11 +19,17 @@ Full project context: @CONTEXT.md
 ## Route overview
 
 ```
-/[locale]/backoffice/tenants              → Platform owner: list/create tenants  (STATIC)
-/[locale]/backoffice/tenants/[id]/members → Platform owner: manage tenant members (STATIC)
-/[locale]/[slug]                          → Public client portal (no auth)        (DYNAMIC)
-/[locale]/[slug]/backoffice               → CPA office backoffice                 (DYNAMIC)
-/[locale]/[slug]/backoffice/team          → CPA office team management            (DYNAMIC)
+/[locale]/backoffice/tenants                                         → Platform owner: list/create tenants (STATIC)
+/[locale]/backoffice/tenants/[id]/members                            → Platform owner: manage tenant members (STATIC)
+/[locale]/[slug]                                                     → Public client portal (no auth) (DYNAMIC)
+/[locale]/[slug]/backoffice                                          → CPA office backoffice (DYNAMIC)
+/[locale]/[slug]/backoffice/team                                     → CPA office team management (DYNAMIC)
+/[locale]/[slug]/backoffice/document-types                           → Standard document library — admin only (DYNAMIC)
+/[locale]/[slug]/annual-income                                       → Office-wide annual income dashboard; auto-creates client_years on load (DYNAMIC)
+/[locale]/[slug]/clients/[clientId]/actions/annual-income-summary    → Per-client doc collection detail; accessed from annual-income dashboard (DYNAMIC)
+/upload/[token]                                                      → Client upload portal — isolated (client-portal) route group, NO auth/lang
+                                                                        token = HS256 JWT (90-day) with clientYearId as `sub`; invalid/expired → Hebrew error screen
+                                                                        sign: signUploadToken(id) · verify: verifyUploadToken(token) in src/lib/upload-token.ts
 ```
 
 Static routes always win over `[slug]`. Reserved slugs (`backoffice`, `login`, `auth`, `api`, `admin`, `en`, `he`) are blocked at tenant creation time.
@@ -31,10 +37,11 @@ Static routes always win over `[slug]`. Reserved slugs (`backoffice`, `login`, `
 ## Session guards quick reference
 
 ```ts
-await requireUser(locale)                        // any authenticated user
-await requirePlatformOwner(locale)               // platform owner only
-await requireTenantAccessBySlug(locale, slug)    // tenant member (slug from URL params)
-await requireTenantAdminBySlug(locale, slug)     // tenant_admin role (slug from URL params)
+await requireUser(locale)                              // any authenticated user
+await requirePlatformOwner(locale)                     // platform owner only
+await requireTenantAccessBySlug(locale, slug)          // any tenant member: admin | manager | staff | reviewer | contractor
+await requireTenantAdminBySlug(locale, slug)           // tenant_admin only
+await requireTenantManagerOrAdminBySlug(locale, slug)  // manager or admin (blocks staff, reviewer, contractor)
 ```
 
 ## Running the project

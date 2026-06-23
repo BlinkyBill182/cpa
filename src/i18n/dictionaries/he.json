@@ -47,7 +47,17 @@
     "disable": "כבה",
     "noActions": "לא הוגדרו פעולות.",
     "backToTenants": "חזרה לדיירים",
-    "error": "הפעולה נכשלה. אנא נסו שנית."
+    "error": "הפעולה נכשלה. אנא נסו שנית.",
+    "driveConfig": "הגדרות Google Drive",
+    "driveFolderIdLabel": "מזהה תיקיית שורש ב-Google Drive",
+    "saveConfig": "שמור הגדרות",
+    "driveConnect": "חבר Google Drive",
+    "driveConnected": "Google Drive מחובר",
+    "driveConnectDescription": "אשר את המשרד להעלות קבצים ל-Google Drive שלך.",
+    "driveConnectedDescription": "הקבצים יועלו לתיקיה המוגדרת ב-Drive תחת חשבון זה.",
+    "driveReconnect": "חבר מחדש",
+    "driveConnectSuccess": "Google Drive חובר בהצלחה.",
+    "driveConnectError": "חיבור Google Drive נכשל. אנא נסה שוב."
   },
   "clients": {
     "title": "לקוחות",
@@ -57,7 +67,15 @@
     "companyNumber": "מספר חברה / רישום",
     "clientId": "מזהה לקוח",
     "manageClients": "ניהול לקוחות",
-    "viewActions": "הפעל פעולה"
+    "viewActions": "הפעל פעולה",
+    "email": "אימייל",
+    "phone": "טלפון",
+    "activeProcesses": "תהליכים פעילים",
+    "noActiveProcesses": "אין תהליכים פעילים.",
+    "viewProcess": "נהל",
+    "uploadPortalLink": "קישור העלאה ללקוח",
+    "bookkeepingStatus": "הנהלת חשבונות",
+    "reportStatus": "דוח"
   },
   "clientManage": {
     "title": "ניהול לקוחות",
@@ -89,7 +107,11 @@
     "importComplete": "הייבוא הסתיים.",
     "importAdded": "נוספו",
     "importUpdated": "עודכנו",
-    "importSkipped": "דולגו"
+    "importSkipped": "דולגו",
+    "email": "אימייל",
+    "phone": "טלפון",
+    "firstName": "שם פרטי",
+    "lastName": "שם משפחה"
   },
   "actions": {
     "marketplace": {
@@ -103,7 +125,62 @@
     },
     "annualIncomeSummary": {
       "title": "סיכום הכנסות שנתי",
-      "description": "יצירת דוח סיכום הכנסות שנתי עבור לקוח זה."
+      "dashboardTitle": "סיכום הכנסות שנתי — כל הלקוחות",
+      "dashboardDescription": "סטטוס איסוף מסמכים עבור כל הלקוחות הפעילים.",
+      "clientColumn": "לקוח",
+      "bookkeepingColumn": "חשבונאי",
+      "reportColumn": "דוח",
+      "docsColumn": "מסמכים",
+      "openButton": "פתח",
+      "description": "ניהול תהליך איסוף המסמכים השנתי עבור לקוח זה.",
+      "yearLabel": "שנת מס",
+      "noRecord": "לא הוגדר תיק לשנה זו.",
+      "startProcess": "פתח תיק",
+      "accounting": {
+        "label": "סטטוס הנהלת חשבונות",
+        "inProgress": "בעבודה",
+        "readyMissing": "מוכן חוסרים",
+        "readyForReview": "מוכן לביקורת",
+        "issue": "בעיה",
+        "skip": "לא עושים"
+      },
+      "report": {
+        "label": "סטטוס הדוח",
+        "notStarted": "טרם החל",
+        "readyMissing": "מוכן חוסרים",
+        "missingCompleted": "חוסרים הושלמו",
+        "readyForCheck": "מוכן לבדיקה",
+        "issue": "בעיה",
+        "readyForSignature": "מוכן לחתימה",
+        "submitted": "הוגש"
+      },
+      "accountant": "מנהל חשבונות",
+      "contractor": "קבלן",
+      "assignContractor": "שיוך קבלן",
+      "notAssigned": "לא שויך",
+      "issueNotes": "פרטי הבעיה",
+      "saveStatus": "עדכן סטטוס",
+      "documents": {
+        "title": "מסמכים נדרשים",
+        "empty": "לא הוגדרו מסמכים לשנה זו.",
+        "addFromList": "הוספה מרשימה בסיסית",
+        "addCustom": "הוספה ידנית",
+        "selectDocType": "בחר סוג מסמך",
+        "customNameLabel": "שם המסמך",
+        "freeTextLabel": "מלל חופשי (אופציונלי)",
+        "requiredLabel": "חובה",
+        "optionalLabel": "אופציונלי",
+        "clientMarkedNone": "הלקוח סימן אין",
+        "noneReason": "סיבה",
+        "add": "הוסף",
+        "remove": "הסר"
+      },
+      "errors": {
+        "createFailed": "לא ניתן לפתוח תיק. אנא נסו שנית.",
+        "statusFailed": "לא ניתן לעדכן סטטוס. אנא נסו שנית.",
+        "docAddFailed": "לא ניתן להוסיף מסמך.",
+        "docRemoveFailed": "לא ניתן להסיר מסמך."
+      }
     },
     "documentRequest": {
       "title": "בקשת מסמך",
@@ -153,6 +230,26 @@
     "role": "התפקיד שלך",
     "teamLink": "ניהול צוות",
     "manageClients": "ניהול לקוחות",
-    "viewClientList": "רשימת לקוחות"
+    "viewClientList": "רשימת לקוחות",
+    "documentTypesLink": "סוגי מסמכים",
+    "annualIncomeLink": "סיכום הכנסות שנתי"
+  },
+  "documentTypes": {
+    "title": "סוגי מסמכים",
+    "description": "ניהול רשימת המסמכים הבסיסית של המשרד.",
+    "backToBackoffice": "חזרה לבק אופיס",
+    "name": "שם המסמך",
+    "allowedFormats": "פורמטים מותרים (מופרדים בפסיקים, לדוגמה: PDF, JPEG, XLS)",
+    "isActive": "פעיל",
+    "add": "הוספת סוג מסמך",
+    "save": "שמור",
+    "deactivate": "בטל",
+    "activate": "הפעל מחדש",
+    "empty": "לא הוגדרו סוגי מסמכים עדיין.",
+    "listHeading": "סוגי מסמכים קיימים",
+    "formats": "פורמטים",
+    "errorSave": "לא ניתן לשמור. אנא נסו שנית.",
+    "successCreated": "סוג המסמך נוצר.",
+    "successUpdated": "סוג המסמך עודכן."
   }
 }

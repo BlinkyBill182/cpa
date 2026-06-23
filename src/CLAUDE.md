@@ -12,7 +12,10 @@
 |---|---|---|
 | `/[lang]/backoffice/...` | Platform owner | Static segment — always takes priority over `[slug]` |
 | `/[lang]/[slug]/backoffice/...` | CPA office staff | `slug` identifies the tenant from the URL |
+| `/[lang]/[slug]/backoffice/document-types` | Office document library | Admin-only; manage standard document types |
+| `/[lang]/[slug]/clients/[clientId]/actions/annual-income-summary` | Annual doc collection | Static route overrides `[actionKey]`; full 7-step workflow |
 | `/[lang]/[slug]` | Public client portal | No auth required |
+| `/upload/[token]` | Client upload portal | Public, JWT-gated (Phase 2); token tied to client_year_id, 90-day expiry |
 
 ## Route protection
 
@@ -51,6 +54,8 @@ Never use raw strings in JSX — always `dict.some.key`. Add every new key to **
 | `ownerTenants` | `/backoffice/tenants` |
 | `ownerMembers` | `/backoffice/tenants/[id]/members` and `/[slug]/backoffice/team` |
 | `tenantBackoffice` | `/[slug]/backoffice` |
+| `documentTypes` | `/[slug]/backoffice/document-types` |
+| `actions.annualIncomeSummary` | `/[slug]/clients/[clientId]/actions/annual-income-summary` |
 
 ## Supabase clients
 

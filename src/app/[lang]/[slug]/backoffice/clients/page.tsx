@@ -34,7 +34,7 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
   const supabase = await createSupabaseServerClient();
   let query = supabase
     .from("office_clients")
-    .select("id, name, tax_id, created_at, deleted_at")
+    .select("id, name, tax_id, email, phone, first_name, last_name, created_at, deleted_at")
     .eq("tenant_id", tenant.id)
     .order("name", { ascending: true });
 
@@ -106,26 +106,32 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
         <h2 className="text-lg font-semibold text-foreground">{m.addClient}</h2>
         <form action={createOfficeClientAction.bind(null, lang, slug)} className="flex max-w-xl flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span>{m.name}</span>
-            <input
-              required
-              name="name"
-              type="text"
-              className="input-field"
-            />
+            <span>{m.name} *</span>
+            <input required name="name" type="text" className="input-field" />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span>{m.companyNumber}</span>
-            <input
-              name="tax_id"
-              type="text"
-              className="input-field"
-            />
+            <input name="tax_id" type="text" className="input-field" />
           </label>
-          <button
-            type="submit"
-            className="w-fit btn-primary"
-          >
+          <div className="flex gap-3">
+            <label className="flex flex-1 flex-col gap-1 text-sm">
+              <span>{m.firstName}</span>
+              <input name="first_name" type="text" className="input-field" />
+            </label>
+            <label className="flex flex-1 flex-col gap-1 text-sm">
+              <span>{m.lastName}</span>
+              <input name="last_name" type="text" className="input-field" />
+            </label>
+          </div>
+          <label className="flex flex-col gap-1 text-sm">
+            <span>{m.email}</span>
+            <input name="email" type="email" className="input-field" />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span>{m.phone}</span>
+            <input name="phone" type="tel" className="input-field" />
+          </label>
+          <button type="submit" className="w-fit btn-primary">
             {m.create}
           </button>
         </form>
@@ -166,38 +172,71 @@ export default async function ManageClientsPage({ params, searchParams }: Manage
                 >
                   <form
                     action={updateOfficeClientAction.bind(null, lang, slug)}
-                    className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end"
+                    className="flex flex-col gap-3"
                   >
                     <input type="hidden" name="client_id" value={client.id} />
-                    <div className="flex min-w-[200px] flex-1 flex-col gap-1 text-sm">
-                      <span>{m.clientId}</span>
-                      <code className="rounded-md border border-border bg-accent-soft/30 px-2 py-2 text-xs">
-                        {client.id}
-                      </code>
+                    <div className="flex flex-wrap gap-3">
+                      <label className="flex min-w-[180px] flex-1 flex-col gap-1 text-sm">
+                        <span>{m.name} *</span>
+                        <input
+                          required
+                          name="name"
+                          type="text"
+                          defaultValue={client.name}
+                          className="input-field"
+                        />
+                      </label>
+                      <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-sm">
+                        <span>{m.companyNumber}</span>
+                        <input
+                          name="tax_id"
+                          type="text"
+                          defaultValue={client.tax_id ?? ""}
+                          className="input-field"
+                        />
+                      </label>
                     </div>
-                    <label className="flex min-w-[180px] flex-1 flex-col gap-1 text-sm">
-                      <span>{m.name}</span>
-                      <input
-                        required
-                        name="name"
-                        type="text"
-                        defaultValue={client.name}
-                        className="input-field"
-                      />
-                    </label>
-                    <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-sm">
-                      <span>{m.companyNumber}</span>
-                      <input
-                        name="tax_id"
-                        type="text"
-                        defaultValue={client.tax_id ?? ""}
-                        className="input-field"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="btn-primary"
-                    >
+                    <div className="flex flex-wrap gap-3">
+                      <label className="flex min-w-[130px] flex-1 flex-col gap-1 text-sm">
+                        <span>{m.firstName}</span>
+                        <input
+                          name="first_name"
+                          type="text"
+                          defaultValue={client.first_name ?? ""}
+                          className="input-field"
+                        />
+                      </label>
+                      <label className="flex min-w-[130px] flex-1 flex-col gap-1 text-sm">
+                        <span>{m.lastName}</span>
+                        <input
+                          name="last_name"
+                          type="text"
+                          defaultValue={client.last_name ?? ""}
+                          className="input-field"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <label className="flex min-w-[180px] flex-1 flex-col gap-1 text-sm">
+                        <span>{m.email}</span>
+                        <input
+                          name="email"
+                          type="email"
+                          defaultValue={client.email ?? ""}
+                          className="input-field"
+                        />
+                      </label>
+                      <label className="flex min-w-[140px] flex-1 flex-col gap-1 text-sm">
+                        <span>{m.phone}</span>
+                        <input
+                          name="phone"
+                          type="tel"
+                          defaultValue={client.phone ?? ""}
+                          className="input-field"
+                        />
+                      </label>
+                    </div>
+                    <button type="submit" className="w-fit btn-primary">
                       {m.save}
                     </button>
                   </form>

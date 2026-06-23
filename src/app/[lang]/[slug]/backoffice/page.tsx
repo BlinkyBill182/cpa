@@ -41,6 +41,18 @@ export default async function TenantBackofficePage({ params }: TenantBackofficeP
         >
           {dict.tenantBackoffice.teamLink}
         </Link>
+        <Link
+          href={`/${slug}/backoffice/document-types`}
+          className="btn-secondary"
+        >
+          {dict.tenantBackoffice.documentTypesLink}
+        </Link>
+        <Link
+          href={`/${slug}/annual-income`}
+          className="btn-primary"
+        >
+          {dict.tenantBackoffice.annualIncomeLink}
+        </Link>
       </nav>
     </section>
   );
