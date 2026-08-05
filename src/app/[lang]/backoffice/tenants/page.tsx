@@ -66,6 +66,13 @@ export default async function BackofficeTenantsPage({ params, searchParams }: Ba
         </div>
       </form>
 
+      {/* Quick links for platform owner */}
+      <div className="flex gap-3">
+        <a href={`/backoffice/document-types`} className="btn-secondary px-3 py-1.5 text-sm">
+          {dict.ownerDocTypes.title}
+        </a>
+      </div>
+
       <section className="flex flex-col gap-3">
         {(tenants ?? []).length === 0 ? (
           <p className="text-muted">{dict.ownerTenants.empty}</p>

@@ -1,78 +1,51 @@
 import { getDictionary } from "@/i18n/get-dictionary";
-import { requireTenantAdminBySlug } from "@/lib/auth/session";
+import { requirePlatformOwner } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import {
-  adoptGlobalDocumentTypeAction,
-  createDocumentTypeAction,
-  toggleDocumentTypeActiveAction,
-  updateDocumentTypeAction,
+  createGlobalDocumentTypeAction,
+  toggleGlobalDocumentTypeActiveAction,
+  updateGlobalDocumentTypeAction,
 } from "./actions";
 
 type Props = {
-  params: Promise<{ lang: string; slug: string }>;
-  searchParams: Promise<{
-    error?: string;
-    created?: string;
-    updated?: string;
-    adopted?: string;
-  }>;
+  params: Promise<{ lang: string }>;
+  searchParams: Promise<{ error?: string; created?: string; updated?: string }>;
 };
 
-export default async function DocumentTypesPage({ params, searchParams }: Props) {
-  const { lang, slug } = await params;
-  const { error, created, updated, adopted } = await searchParams;
+export default async function GlobalDocumentTypesPage({ params, searchParams }: Props) {
+  const { lang } = await params;
+  const { error, created, updated } = await searchParams;
 
   const dict = await getDictionary(lang);
-  const { tenant } = await requireTenantAdminBySlug(lang, slug);
-  const d = dict.documentTypes;
+  await requirePlatformOwner(lang);
+  const d = dict.ownerDocTypes;
 
   const supabase = await createSupabaseServerClient();
-
-  // Fetch tenant-specific types
   const { data: documentTypes } = await supabase
     .from("document_types")
-    .select("id, name, allowed_formats, is_active, validation_prompt")
-    .eq("tenant_id", tenant.id)
-    .order("name");
-
-  // Fetch active global types
-  const { data: globalTypes } = await supabase
-    .from("document_types")
-    .select("id, name, allowed_formats")
+    .select("id, name, allowed_formats, is_active")
     .is("tenant_id", null)
-    .eq("is_active", true)
     .order("name");
 
-  // Names already in tenant's library (for "already in office" indicator)
-  const adoptedNames = new Set(
-    (documentTypes ?? []).map((dt) => dt.name.toLowerCase()),
-  );
-
-  const createBound = createDocumentTypeAction.bind(null, lang, slug);
-  const updateBound = updateDocumentTypeAction.bind(null, lang, slug);
-  const toggleBound = toggleDocumentTypeActiveAction.bind(null, lang, slug);
-  const adoptBound = adoptGlobalDocumentTypeAction.bind(null, lang, slug);
+  const createBound = createGlobalDocumentTypeAction.bind(null, lang);
+  const updateBound = updateGlobalDocumentTypeAction.bind(null, lang);
+  const toggleBound = toggleGlobalDocumentTypeActiveAction.bind(null, lang);
 
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <a href={`/${slug}/backoffice`} className="link-accent text-sm">
-          ← {d.backToBackoffice}
+        <a href={`/backoffice/tenants`} className="link-accent text-sm">
+          ← {d.backToTenants}
         </a>
         <h1 className="page-title">{d.title}</h1>
         <p className="text-muted">{d.description}</p>
       </header>
 
       {/* Feedback banners */}
-      {error === "save" && (
+      {error && (
         <p className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
           {d.errorSave}
-        </p>
-      )}
-      {error === "already_exists" && (
-        <p className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-          {d.errorAlreadyExists}
         </p>
       )}
       {created && (
@@ -85,13 +58,8 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
           {d.successUpdated}
         </p>
       )}
-      {adopted && (
-        <p className="rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300">
-          {d.successAdopted}
-        </p>
-      )}
 
-      {/* Add new document type */}
+      {/* Add new global document type */}
       <div className="surface-card p-6 flex flex-col gap-4">
         <h2 className="text-base font-semibold text-foreground">{d.add}</h2>
         <form action={createBound} className="flex flex-col gap-3">
@@ -115,24 +83,13 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
               placeholder="PDF, JPEG, XLS"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-foreground">{d.validationPromptLabel}</label>
-            <p className="text-xs text-muted">{d.validationPromptHint}</p>
-            <textarea
-              name="validation_prompt"
-              rows={5}
-              maxLength={4000}
-              className="input-field resize-y text-sm"
-              placeholder={d.validationPromptPlaceholder}
-            />
-          </div>
           <button type="submit" className="btn-primary self-start">
             {d.add}
           </button>
         </form>
       </div>
 
-      {/* Existing document types */}
+      {/* Existing global document types */}
       <div className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-foreground">{d.listHeading}</h2>
 
@@ -191,18 +148,6 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
                       className="input-field text-sm"
                       placeholder="PDF, JPEG, XLS"
                     />
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-foreground">{d.validationPromptLabel}</label>
-                      <p className="text-xs text-muted">{d.validationPromptHint}</p>
-                      <textarea
-                        name="validation_prompt"
-                        rows={6}
-                        maxLength={4000}
-                        defaultValue={dt.validation_prompt ?? ""}
-                        className="input-field resize-y text-sm"
-                        placeholder={d.validationPromptPlaceholder}
-                      />
-                    </div>
                     <button type="submit" className="btn-primary text-sm self-start">
                       {d.save}
                     </button>
@@ -210,51 +155,6 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
                 </details>
               </li>
             ))}
-          </ul>
-        )}
-      </div>
-      {/* Global library section */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-foreground">{d.globalLibraryHeading}</h2>
-          <p className="text-sm text-muted">{d.globalLibraryDescription}</p>
-        </div>
-
-        {!globalTypes || globalTypes.length === 0 ? (
-          <p className="text-sm text-muted">{d.globalEmpty}</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {globalTypes.map((gt) => {
-              const isAdopted = adoptedNames.has(gt.name.toLowerCase());
-              return (
-                <li
-                  key={gt.id}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/60 px-4 py-3"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <p className="font-medium text-foreground">{gt.name}</p>
-                    {gt.allowed_formats.length > 0 && (
-                      <p className="text-xs text-muted">
-                        {d.formats}: {gt.allowed_formats.join(", ")}
-                      </p>
-                    )}
-                  </div>
-
-                  {isAdopted ? (
-                    <span className="shrink-0 text-xs text-green-700 dark:text-green-400">
-                      {d.alreadyInOffice}
-                    </span>
-                  ) : (
-                    <form action={adoptBound} className="shrink-0">
-                      <input type="hidden" name="id" value={gt.id} />
-                      <button type="submit" className="btn-secondary text-xs px-3 py-1.5">
-                        {d.adoptButton}
-                      </button>
-                    </form>
-                  )}
-                </li>
-              );
-            })}
           </ul>
         )}
       </div>

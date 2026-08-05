@@ -61,7 +61,7 @@ export default async function UploadPortalPage({ params }: UploadPortalPageProps
     docIds.length > 0
       ? supabase
           .from("uploaded_files")
-          .select("id, original_filename, file_size_kb, uploaded_at, upload_status, client_year_document_id")
+          .select("id, original_filename, file_size_kb, uploaded_at, upload_status, ai_status, ai_notes, ai_result, client_year_document_id")
           .in("client_year_document_id", docIds)
           .order("uploaded_at", { ascending: false })
       : Promise.resolve({ data: [] }),

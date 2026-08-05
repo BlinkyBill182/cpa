@@ -126,3 +126,37 @@ export async function uploadToDrive(params: {
   const result = (await uploadRes.json()) as { id: string; webViewLink: string };
   return { fileId: result.id, webViewLink: result.webViewLink };
 }
+
+// ─── Download ─────────────────────────────────────────────────────────────────
+
+/**
+ * Extracts the Google Drive fileId from a webViewLink URL.
+ * Supports: https://drive.google.com/file/d/{fileId}/view
+ */
+export function extractDriveFileId(webViewLink: string): string | null {
+  const match = webViewLink.match(/\/file\/d\/([^/?#]+)/);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Downloads a file from Google Drive by fileId.
+ * Authenticates via an OAuth2 refresh token.
+ */
+export async function downloadFromDrive(params: {
+  refreshToken: string;
+  fileId: string;
+}): Promise<ArrayBuffer> {
+  const { refreshToken, fileId } = params;
+  const token = await getAccessTokenFromRefreshToken(refreshToken);
+
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media&${DRIVE_PARAMS}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+
+  if (!res.ok) {
+    throw new Error(`Drive file download failed (${res.status}): ${await res.text()}`);
+  }
+
+  return res.arrayBuffer();
+}

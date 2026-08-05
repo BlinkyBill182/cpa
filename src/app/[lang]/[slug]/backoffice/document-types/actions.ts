@@ -32,10 +32,12 @@ export const createDocumentTypeAction = async (
     .object({
       name: nameSchema,
       allowed_formats: z.array(z.string()).default([]),
+      validation_prompt: z.string().trim().max(4000).optional().nullable(),
     })
     .safeParse({
       name: formData.get("name"),
       allowed_formats: parseFormats(formData.get("allowed_formats")),
+      validation_prompt: formData.get("validation_prompt") || null,
     });
 
   if (!parsed.success) {
@@ -48,6 +50,7 @@ export const createDocumentTypeAction = async (
     tenant_id: tenant.id,
     name: parsed.data.name,
     allowed_formats: parsed.data.allowed_formats,
+    validation_prompt: parsed.data.validation_prompt ?? null,
   });
 
   if (error) {
@@ -79,11 +82,13 @@ export const updateDocumentTypeAction = async (
       id: uuidSchema,
       name: nameSchema,
       allowed_formats: z.array(z.string()).default([]),
+      validation_prompt: z.string().trim().max(4000).optional().nullable(),
     })
     .safeParse({
       id: formData.get("id"),
       name: formData.get("name"),
       allowed_formats: parseFormats(formData.get("allowed_formats")),
+      validation_prompt: formData.get("validation_prompt") || null,
     });
 
   if (!parsed.success) {
@@ -97,6 +102,7 @@ export const updateDocumentTypeAction = async (
     .update({
       name: parsed.data.name,
       allowed_formats: parsed.data.allowed_formats,
+      validation_prompt: parsed.data.validation_prompt ?? null,
     })
     .eq("id", parsed.data.id)
     .eq("tenant_id", tenant.id);
@@ -114,6 +120,72 @@ export const updateDocumentTypeAction = async (
 
   revalidatePath(`/${slug}/backoffice/document-types`);
   redirect(`/${slug}/backoffice/document-types?updated=1`);
+};
+
+// ─── Adopt a global document type ─────────────────────────────────────────
+
+export const adoptGlobalDocumentTypeAction = async (
+  locale: string,
+  slug: string,
+  formData: FormData,
+) => {
+  const { user, tenant } = await requireTenantAdminBySlug(locale, slug);
+
+  const parsed = z
+    .object({ id: uuidSchema })
+    .safeParse({ id: formData.get("id") });
+
+  if (!parsed.success) {
+    redirect(`/${slug}/backoffice/document-types?error=save`);
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  // Fetch the global type (must have tenant_id IS NULL)
+  const { data: globalType, error: fetchError } = await supabase
+    .from("document_types")
+    .select("name, allowed_formats")
+    .eq("id", parsed.data.id)
+    .is("tenant_id", null)
+    .single();
+
+  if (fetchError || !globalType) {
+    redirect(`/${slug}/backoffice/document-types?error=save`);
+  }
+
+  // Check for name collision in tenant's own types
+  const { data: existing } = await supabase
+    .from("document_types")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .ilike("name", globalType.name)
+    .maybeSingle();
+
+  if (existing) {
+    redirect(`/${slug}/backoffice/document-types?error=already_exists`);
+  }
+
+  // Create the tenant's copy (no validation_prompt — tenant can add their own later)
+  const { error: insertError } = await supabase.from("document_types").insert({
+    tenant_id: tenant.id,
+    name: globalType.name,
+    allowed_formats: globalType.allowed_formats,
+    validation_prompt: null,
+  });
+
+  if (insertError) {
+    redirect(`/${slug}/backoffice/document-types?error=save`);
+  }
+
+  await logAuditEvent({
+    action: "document_type.adopted_from_global",
+    actorUserId: user.id,
+    tenantId: tenant.id,
+    payload: { global_id: parsed.data.id, name: globalType.name },
+  });
+
+  revalidatePath(`/${slug}/backoffice/document-types`);
+  redirect(`/${slug}/backoffice/document-types?adopted=1`);
 };
 
 // ─── Toggle active ─────────────────────────────────────────────────────────

@@ -194,26 +194,29 @@ export type Database = {
       document_types: {
         Row: {
           id: string;
-          tenant_id: string;
+          tenant_id: string | null;
           name: string;
           allowed_formats: string[];
           is_active: boolean;
+          validation_prompt: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
-          tenant_id: string;
+          tenant_id?: string | null;
           name: string;
           allowed_formats?: string[];
           is_active?: boolean;
+          validation_prompt?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
-          tenant_id?: string;
+          tenant_id?: string | null;
           name?: string;
           allowed_formats?: string[];
           is_active?: boolean;
+          validation_prompt?: string | null;
           created_at?: string;
         };
       };
@@ -476,6 +479,7 @@ export type Database = {
           uploaded_at: string;
           ai_status: "pending" | "valid" | "invalid";
           ai_notes: string | null;
+          ai_result: Json | null;
           accountant_approved: boolean | null;
           accountant_rejection_reason: string | null;
         };
@@ -489,6 +493,7 @@ export type Database = {
           uploaded_at?: string;
           ai_status?: "pending" | "valid" | "invalid";
           ai_notes?: string | null;
+          ai_result?: Json | null;
           accountant_approved?: boolean | null;
           accountant_rejection_reason?: string | null;
         };
@@ -502,6 +507,7 @@ export type Database = {
           uploaded_at?: string;
           ai_status?: "pending" | "valid" | "invalid";
           ai_notes?: string | null;
+          ai_result?: Json | null;
           accountant_approved?: boolean | null;
           accountant_rejection_reason?: string | null;
         };

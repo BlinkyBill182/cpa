@@ -475,3 +475,136 @@ export const removeDocumentAction = async (
   revalidatePath(basePath(slug, parsed.data.client_id, parsed.data.year));
   redirect(basePath(slug, parsed.data.client_id, parsed.data.year));
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Revalidate pending AI status for a specific uploaded_file
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type RecheckResult =
+  | { status: "ok"; aiStatus: "valid" | "invalid"; notes: string | null }
+  | { status: "error"; message: string }
+  | null;
+
+const revalidateFileSchema = z.object({
+  file_id: uuidSchema,
+  client_year_id: uuidSchema,
+  client_id: uuidSchema,
+  year: yearSchema,
+});
+
+export const revalidatePendingFileAction = async (
+  lang: string,
+  slug: string,
+  _prevState: RecheckResult,
+  formData: FormData,
+): Promise<RecheckResult> => {
+  const { tenant } = await requireTenantAccessBySlug(lang, slug);
+  const parsed = revalidateFileSchema.safeParse({
+    file_id: formData.get("file_id"),
+    client_year_id: formData.get("client_year_id"),
+    client_id: formData.get("client_id"),
+    year: formData.get("year"),
+  });
+  if (!parsed.success) return { status: "error", message: "נתונים שגויים" };
+
+  // Call the admin revalidate endpoint internally — re-use the same logic
+  // by importing helpers directly (avoids HTTP round-trip in server action)
+  const { validateUploadedDocument } = await import("@/lib/ai-validation");
+  const { downloadFromDrive, extractDriveFileId } = await import("@/lib/google-drive");
+  const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
+
+  const adminClient = createSupabaseAdminClient();
+
+  // Load the file record (verify it belongs to this tenant via client_year)
+  const { data: file } = await adminClient
+    .from("uploaded_files")
+    .select("id, drive_url, original_filename, client_year_document_id")
+    .eq("id", parsed.data.file_id)
+    .single();
+
+  if (!file) return { status: "error", message: "הקובץ לא נמצא" };
+
+  // Verify the file's client_year belongs to this tenant
+  const { data: cy } = await adminClient
+    .from("client_years")
+    .select("year, tenant_id")
+    .eq("id", parsed.data.client_year_id)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (!cy) return { status: "error", message: "שנת הלקוח לא נמצאה" };
+
+  // Get document name for context
+  const { data: cyd } = await adminClient
+    .from("client_year_documents")
+    .select("custom_name, document_type_id")
+    .eq("id", file.client_year_document_id)
+    .single();
+
+  let documentName = cyd?.custom_name ?? "מסמך";
+  let validationPrompt: string | null = null;
+  if (cyd?.document_type_id) {
+    const { data: dt } = await adminClient
+      .from("document_types")
+      .select("name, validation_prompt")
+      .eq("id", cyd.document_type_id)
+      .single();
+    if (dt?.name && !cyd.custom_name) documentName = dt.name;
+    validationPrompt = dt?.validation_prompt ?? null;
+  }
+
+  // Get OAuth token
+  const { data: secret } = await adminClient
+    .from("tenant_secrets")
+    .select("encrypted_key")
+    .eq("tenant_id", tenant.id)
+    .eq("service", "google_drive_oauth")
+    .eq("is_active", true)
+    .single();
+
+  if (!secret) return { status: "error", message: "חיבור Google Drive לא מוגדר" };
+
+  const fileId = extractDriveFileId(file.drive_url);
+  if (!fileId) return { status: "error", message: "קישור Drive שגוי" };
+
+  let result: RecheckResult;
+  try {
+    const fileBuffer = await downloadFromDrive({ refreshToken: secret.encrypted_key, fileId });
+    const mimeType = file.original_filename.endsWith(".pdf")
+      ? "application/pdf"
+      : file.original_filename.match(/\.(jpg|jpeg)$/i)
+        ? "image/jpeg"
+        : file.original_filename.match(/\.png$/i)
+          ? "image/png"
+          : "application/octet-stream";
+
+    const validation = await validateUploadedDocument({
+      fileBuffer,
+      mimeType,
+      documentName,
+      year: cy.year,
+      validationPrompt,
+    });
+
+    await adminClient
+      .from("uploaded_files")
+      .update({
+        ai_status: validation.valid ? "valid" : "invalid",
+        ai_notes: validation.notes,
+      })
+      .eq("id", file.id);
+
+    result = { status: "ok", aiStatus: validation.valid ? "valid" : "invalid", notes: validation.notes };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "שגיאה לא ידועה";
+    console.error("[revalidatePendingFileAction] error:", msg);
+    await adminClient
+      .from("uploaded_files")
+      .update({ ai_status: "invalid", ai_notes: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive" })
+      .eq("id", file.id);
+    result = { status: "error", message: `שגיאה בהורדת הקובץ מ-Drive: ${msg}` };
+  }
+
+  revalidatePath(basePath(slug, parsed.data.client_id, parsed.data.year));
+  return result;
+};

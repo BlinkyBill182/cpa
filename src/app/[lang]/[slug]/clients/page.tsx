@@ -1,4 +1,5 @@
 import { getDictionary } from "@/i18n/get-dictionary";
+import { getClientActionsForTenant } from "@/lib/actions/registry";
 import { requireTenantAccessBySlug } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -12,12 +13,23 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
   const { tenant, role } = await requireTenantAccessBySlug(lang, slug);
 
   const supabase = await createSupabaseServerClient();
-  const { data: clients } = await supabase
-    .from("office_clients")
-    .select("id, name, tax_id, created_at")
-    .eq("tenant_id", tenant.id)
-    .is("deleted_at", null)
-    .order("name", { ascending: true });
+
+  const [{ data: clients }, { data: enabledConfigs }] = await Promise.all([
+    supabase
+      .from("office_clients")
+      .select("id, name, tax_id, created_at")
+      .eq("tenant_id", tenant.id)
+      .is("deleted_at", null)
+      .order("name", { ascending: true }),
+    supabase
+      .from("office_action_configs")
+      .select("action_key")
+      .eq("tenant_id", tenant.id)
+      .eq("is_enabled", true),
+  ]);
+
+  const enabledKeys = new Set((enabledConfigs ?? []).map((c) => c.action_key));
+  const hasClientActions = getClientActionsForTenant(slug).some((a) => enabledKeys.has(a.key));
 
   const canManage = role === "tenant_admin" || role === "manager";
 
@@ -56,9 +68,11 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
                     </p>
                   ) : null}
                 </div>
-                <span className="btn-primary px-3 py-1.5">
-                  {dict.clients.viewActions}
-                </span>
+                {hasClientActions && (
+                  <span className="btn-primary px-3 py-1.5">
+                    {dict.clients.viewActions}
+                  </span>
+                )}
               </a>
             </li>
           ))}

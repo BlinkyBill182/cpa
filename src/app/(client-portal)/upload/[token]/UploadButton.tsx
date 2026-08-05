@@ -2,12 +2,26 @@
 
 import { useRef, useState } from "react";
 
+type ValidationError = { field: string; message: string };
+
+type AIResult = {
+  formType?: string | null;
+  formYear?: number | null;
+  isValid?: boolean;
+  confidence?: number;
+  errors?: ValidationError[];
+  warnings?: ValidationError[];
+} | null;
+
 type UploadedFile = {
   id: string;
   original_filename: string;
   file_size_kb: number | null;
   uploaded_at: string;
   upload_status: "in_drive" | "failed";
+  ai_status: "pending" | "valid" | "invalid";
+  ai_notes: string | null;
+  ai_result: AIResult;
 };
 
 type Props = {
@@ -82,22 +96,77 @@ export default function UploadButton({ clientYearDocumentId, token, allowedForma
   return (
     <div className="flex flex-col gap-2">
       {/* Existing uploads */}
-      {uploads.length > 0 && (
-        <ul className="flex flex-col gap-1">
-          {uploads.map((u) => (
-            <li
-              key={u.id}
-              className="flex items-center gap-2 rounded-xl bg-green-50 px-3 py-2 text-xs text-green-800"
-            >
-              <span className="leading-none">✓</span>
-              <span className="flex-1 truncate font-medium">{u.original_filename}</span>
-              {u.file_size_kb !== null && (
-                <span className="shrink-0 text-green-600">{formatBytes(u.file_size_kb)}</span>
+              {uploads.length > 0 && (
+                <ul className="flex flex-col gap-2">
+                  {uploads.map((u) => {
+                    const result = u.ai_result;
+                    const errors: ValidationError[] = result?.errors ?? [];
+                    const warnings: ValidationError[] = result?.warnings ?? [];
+                    const formLabel = result?.formType
+                      ? `${result.formType}${result.formYear ? ` (${result.formYear})` : ""}`
+                      : null;
+
+                    return (
+                      <li key={u.id} className="flex flex-col gap-1">
+                        {/* File row */}
+                        <div
+                          className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs ${
+                            u.ai_status === "invalid"
+                              ? "bg-red-50 text-red-800"
+                              : u.ai_status === "valid"
+                                ? "bg-green-50 text-green-800"
+                                : "bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <span className="leading-none">
+                            {u.ai_status === "valid" ? "✓" : u.ai_status === "invalid" ? "⚠️" : "⏳"}
+                          </span>
+                          <span className="flex-1 truncate font-medium">{u.original_filename}</span>
+                          {formLabel && (
+                            <span className="shrink-0 rounded bg-white/60 px-1.5 py-0.5 text-[10px] font-semibold">
+                              {formLabel}
+                            </span>
+                          )}
+                          {u.file_size_kb !== null && (
+                            <span className="shrink-0 opacity-70">{formatBytes(u.file_size_kb)}</span>
+                          )}
+                        </div>
+
+                        {/* Errors */}
+                        {errors.length > 0 && (
+                          <ul className="flex flex-col gap-0.5 px-1">
+                            {errors.map((e, i) => (
+                              <li key={i} className="flex items-start gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700">
+                                <span className="shrink-0 font-bold">✗</span>
+                                <span><span className="font-semibold">{e.field}:</span> {e.message}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {/* Warnings */}
+                        {warnings.length > 0 && (
+                          <ul className="flex flex-col gap-0.5 px-1">
+                            {warnings.map((w, i) => (
+                              <li key={i} className="flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700">
+                                <span className="shrink-0">⚠</span>
+                                <span><span className="font-semibold">{w.field}:</span> {w.message}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {/* Fallback: plain notes when no structured result */}
+                        {!result && u.ai_status === "invalid" && u.ai_notes && (
+                          <p className="rounded-xl bg-red-50 px-3 py-1.5 text-xs text-red-700">
+                            {u.ai_notes}
+                          </p>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
-            </li>
-          ))}
-        </ul>
-      )}
 
       {/* Error message */}
       {error && (

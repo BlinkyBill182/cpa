@@ -21,6 +21,7 @@ Full project context: @CONTEXT.md
 ```
 /[locale]/backoffice/tenants                                         → Platform owner: list/create tenants (STATIC)
 /[locale]/backoffice/tenants/[id]/members                            → Platform owner: manage tenant members (STATIC)
+/[locale]/backoffice/document-types                                  → Platform owner: manage global document types (STATIC)
 /[locale]/[slug]                                                     → Public client portal (no auth) (DYNAMIC)
 /[locale]/[slug]/backoffice                                          → CPA office backoffice (DYNAMIC)
 /[locale]/[slug]/backoffice/team                                     → CPA office team management (DYNAMIC)

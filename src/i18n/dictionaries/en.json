@@ -173,7 +173,14 @@
         "clientMarkedNone": "Client marked N/A",
         "noneReason": "Reason",
         "add": "Add",
-        "remove": "Remove"
+        "remove": "Remove",
+        "noUploads": "No files uploaded yet",
+        "aiValid": "✓ valid",
+        "aiInvalid": "⚠ invalid",
+        "aiPending": "⏳ pending",
+        "aiRecheck": "Re-check AI",
+        "aiChecking": "Checking…",
+        "aiRecheckTitle": "Re-run AI validation for this file"
       },
       "errors": {
         "createFailed": "Could not start the process. Please try again.",
@@ -246,10 +253,37 @@
     "deactivate": "Deactivate",
     "activate": "Reactivate",
     "empty": "No document types defined yet.",
-    "listHeading": "Existing document types",
+    "listHeading": "Your document types",
     "formats": "Formats",
     "errorSave": "Could not save. Please try again.",
     "successCreated": "Document type created.",
-    "successUpdated": "Document type updated."
+    "successUpdated": "Document type updated.",
+    "successAdopted": "Document type added to your library.",
+    "errorAlreadyExists": "A document type with this name already exists in your library.",
+    "validationPromptLabel": "AI validation prompt (optional)",
+    "validationPromptHint": "Describe what to look for when validating this document. Claude will use this as specific instructions alongside its general Israeli CPA knowledge.",
+    "validationPromptPlaceholder": "e.g. For Form 106, look for the heading אישור על-פי תקנות מס הכנסה, employer details, employee ID, and income/tax tables...",
+    "globalLibraryHeading": "Platform document library",
+    "globalLibraryDescription": "Standard document types defined by the platform. Click 'Add to office' to copy one into your library so you can assign it to clients and add your own AI prompt.",
+    "adoptButton": "Add to office",
+    "alreadyInOffice": "✓ Already in your library",
+    "globalEmpty": "No platform document types defined yet."
+  },
+  "ownerDocTypes": {
+    "title": "Global document types",
+    "description": "Define standard document types available to all offices. Offices can adopt these into their own library and add their own AI validation prompt.",
+    "backToTenants": "Back to tenants",
+    "add": "Add global document type",
+    "name": "Document name",
+    "allowedFormats": "Allowed formats (comma-separated, e.g. PDF, JPEG, XLS)",
+    "save": "Save",
+    "deactivate": "Deactivate",
+    "activate": "Reactivate",
+    "empty": "No global document types yet.",
+    "listHeading": "Global document types",
+    "formats": "Formats",
+    "errorSave": "Could not save. Please try again.",
+    "successCreated": "Global document type created.",
+    "successUpdated": "Global document type updated."
   }
 }

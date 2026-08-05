@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDictionary } from "@/i18n/get-dictionary";
-import { getActionsForTenant } from "@/lib/actions/registry";
+import { getClientActionsForTenant } from "@/lib/actions/registry";
 import { requireTenantAccessBySlug } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signUploadToken } from "@/lib/upload-token";
@@ -53,18 +53,39 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       .eq("client_id", clientId)
       .eq("tenant_id", tenant.id)
       .order("year", { ascending: false })
-      .limit(5),
+      .limit(10),
   ]);
 
   if (!client) notFound();
 
   const enabledKeys = new Set((configs ?? []).map((c) => c.action_key));
-  const availableActions = getActionsForTenant(slug).filter((a) =>
+  // Only show client-scoped actions here; office-scoped (e.g. annual-income-summary) have their own dashboard
+  const availableActions = getClientActionsForTenant(slug).filter((a) =>
     enabledKeys.has(a.key),
   );
 
   const hasContact = client.email || client.phone || client.first_name || client.last_name;
-  const years = clientYears ?? [];
+  const allYears = clientYears ?? [];
+
+  // Filter out auto-created empty years: only show a year if it has documents configured
+  // or if its status was manually advanced beyond the default "in_progress"
+  const yearIds = allYears.map((cy) => cy.id);
+  const { data: docCounts } =
+    yearIds.length > 0
+      ? await supabase
+          .from("client_year_documents")
+          .select("client_year_id")
+          .in("client_year_id", yearIds)
+      : { data: [] };
+
+  const yearsWithDocs = new Set((docCounts ?? []).map((d) => d.client_year_id));
+
+  const years = allYears.filter(
+    (cy) =>
+      yearsWithDocs.has(cy.id) ||
+      cy.accounting_status !== "in_progress" ||
+      cy.report_status !== null,
+  );
 
   // Pre-sign a 90-day JWT upload token for each active year
   const yearsWithTokens = await Promise.all(

@@ -4,4 +4,5 @@ export const annualIncomeSummary: ActionDefinition = {
   key: "annual-income-summary",
   icon: "📊",
   dictNamespace: "annualIncomeSummary",
+  scope: "office",
 };

@@ -39,8 +39,8 @@ html.dark {
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-rubik);
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
 
   --color-background: var(--app-bg);
   --color-surface: var(--app-surface);
@@ -60,7 +60,7 @@ html.dark {
 body {
   background: var(--app-bg);
   color: var(--app-fg);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-rubik), Arial, Helvetica, sans-serif;
 }
 
 @layer components {

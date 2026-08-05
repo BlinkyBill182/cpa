@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { validateUploadedDocument } from "@/lib/ai-validation";
 import { uploadToDrive } from "@/lib/google-drive";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyUploadToken } from "@/lib/upload-token";
@@ -129,13 +130,15 @@ export async function POST(request: NextRequest) {
 
   // ── Get document display name for folder ────────────────────────────────────
   let documentName = doc.custom_name ?? "מסמך";
-  if (!doc.custom_name && doc.document_type_id) {
+  let validationPrompt: string | null = null;
+  if (doc.document_type_id) {
     const { data: dt } = await supabase
       .from("document_types")
-      .select("name")
+      .select("name, validation_prompt")
       .eq("id", doc.document_type_id)
       .single();
-    documentName = dt?.name ?? documentName;
+    if (dt?.name && !doc.custom_name) documentName = dt.name;
+    validationPrompt = dt?.validation_prompt ?? null;
   }
 
   // ── Upload to Google Drive ───────────────────────────────────────────────────
@@ -167,8 +170,9 @@ export async function POST(request: NextRequest) {
       file_size_kb: Math.ceil(file.size / 1024),
       drive_url: driveResult.webViewLink,
       upload_status: "in_drive",
+      ai_status: "pending",
     })
-    .select("id, original_filename, file_size_kb, uploaded_at, upload_status")
+    .select("id, original_filename, file_size_kb, uploaded_at, upload_status, ai_status, ai_notes, ai_result")
     .single();
 
   if (dbError) {
@@ -176,5 +180,32 @@ export async function POST(request: NextRequest) {
     return err("הקובץ הועלה אך לא נשמר. פנה לתמיכה.", 500);
   }
 
-  return NextResponse.json({ file: record }, { status: 201 });
+  // ── AI validation (best-effort — never blocks or fails the upload) ──────────
+  const validation = await validateUploadedDocument({
+    fileBuffer,
+    mimeType: file.type,
+    documentName,
+    year: clientYear.year,
+    validationPrompt,
+  });
+
+  const { data: finalRecord } = await supabase
+    .from("uploaded_files")
+    .update({
+      ai_status: validation.valid ? "valid" : "invalid",
+      ai_notes: validation.notes,
+      ai_result: {
+        formType: validation.formType,
+        formYear: validation.formYear,
+        isValid: validation.valid,
+        confidence: validation.confidence,
+        errors: validation.errors,
+        warnings: validation.warnings,
+      },
+    })
+    .eq("id", record!.id)
+    .select("id, original_filename, file_size_kb, uploaded_at, upload_status, ai_status, ai_notes, ai_result")
+    .single();
+
+  return NextResponse.json({ file: finalRecord ?? record }, { status: 201 });
 }

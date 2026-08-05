@@ -10,9 +10,11 @@ import {
   assignContractorAction,
   createClientYearAction,
   removeDocumentAction,
+  revalidatePendingFileAction,
   updateAccountingStatusAction,
   updateReportStatusAction,
 } from "./actions";
+import { RecheckForm } from "./RecheckButton";
 
 type Props = {
   params: Promise<{ lang: string; slug: string; clientId: string }>;
@@ -111,6 +113,26 @@ export default async function AnnualIncomeSummaryPage({ params, searchParams }: 
   // Build a name lookup from the document type library so docs can resolve their type name locally
   const docTypeNameMap = new Map((documentTypes ?? []).map((dt) => [dt.id, dt.name]));
 
+  const docs = clientYear?.client_year_documents ?? [];
+
+  // Fetch uploaded files for all documents in this year
+  const docIds = docs.map((d) => d.id);
+  const { data: uploadedFiles } =
+    docIds.length > 0
+      ? await supabase
+          .from("uploaded_files")
+          .select("id, client_year_document_id, original_filename, file_size_kb, ai_status, ai_notes, ai_result, drive_url")
+          .in("client_year_document_id", docIds)
+          .order("uploaded_at", { ascending: false })
+      : { data: [] };
+
+  const uploadsByDoc = new Map<string, NonNullable<typeof uploadedFiles>>();
+  for (const f of uploadedFiles ?? []) {
+    const list = uploadsByDoc.get(f.client_year_document_id) ?? [];
+    list.push(f);
+    uploadsByDoc.set(f.client_year_document_id, list);
+  }
+
   const isAdmin = role === "tenant_admin";
   const isManager = role === "manager" || isAdmin;
   const isContractor = role === "contractor";
@@ -127,8 +149,7 @@ export default async function AnnualIncomeSummaryPage({ params, searchParams }: 
   const addFromTypeBound = addDocumentFromTypeAction.bind(null, lang, slug);
   const addCustomBound = addCustomDocumentAction.bind(null, lang, slug);
   const removeDocBound = removeDocumentAction.bind(null, lang, slug);
-
-  const docs = clientYear?.client_year_documents ?? [];
+  const recheckFileBound = revalidatePendingFileAction.bind(null, lang, slug);
 
   const statusLabelAccounting = (s: string) => {
     const map: Record<string, string> = {
@@ -405,34 +426,164 @@ export default async function AnnualIncomeSummaryPage({ params, searchParams }: 
                   return (
                     <li
                       key={doc.id}
-                      className="list-row gap-3"
+                      className="flex flex-col gap-2 rounded-lg border border-border bg-surface px-4 py-3"
                     >
-                      <div className="flex min-w-0 flex-col gap-0.5">
-                        <span className="truncate text-sm font-medium text-foreground">
-                          {label}
-                        </span>
-                        <span className="text-xs text-muted">
-                          {doc.is_required ? d.documents.requiredLabel : d.documents.optionalLabel}
-                          {doc.client_marked_none && (
-                            <> · {d.documents.clientMarkedNone}{doc.none_reason ? `: ${doc.none_reason}` : ""}</>
-                          )}
-                        </span>
+                      {/* Doc name + AI summary chip + remove button */}
+                      <div className="flex items-start gap-3">
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="truncate text-sm font-medium text-foreground">
+                              {label}
+                            </span>
+                            {/* Document-level AI status summary */}
+                            {(() => {
+                              const files = uploadsByDoc.get(doc.id) ?? [];
+                              if (files.length === 0) return null;
+                              const hasInvalid = files.some((f) => f.ai_status === "invalid");
+                              const hasPending = files.some((f) => f.ai_status === "pending");
+                              const allValid = !hasInvalid && !hasPending;
+                              return (
+                                <span
+                                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    hasInvalid
+                                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                                      : hasPending
+                                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                                        : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                  }`}
+                                >
+                                  {hasInvalid
+                                    ? d.documents.aiInvalid
+                                    : hasPending
+                                      ? d.documents.aiPending
+                                      : d.documents.aiValid}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          <span className="text-xs text-muted">
+                            {doc.is_required ? d.documents.requiredLabel : d.documents.optionalLabel}
+                            {doc.client_marked_none && (
+                              <> · {d.documents.clientMarkedNone}{doc.none_reason ? `: ${doc.none_reason}` : ""}</>
+                            )}
+                          </span>
+                        </div>
+
+                        {canManageDocuments && (
+                          <form action={removeDocBound}>
+                            <input type="hidden" name="document_id" value={doc.id} />
+                            <input type="hidden" name="client_year_id" value={clientYear.id} />
+                            <input type="hidden" name="client_id" value={clientId} />
+                            <input type="hidden" name="year" value={selectedYear} />
+                            <button
+                              type="submit"
+                              className="shrink-0 text-xs text-muted hover:text-foreground transition-colors"
+                            >
+                              {d.documents.remove}
+                            </button>
+                          </form>
+                        )}
                       </div>
 
-                      {canManageDocuments && (
-                        <form action={removeDocBound}>
-                          <input type="hidden" name="document_id" value={doc.id} />
-                          <input type="hidden" name="client_year_id" value={clientYear.id} />
-                          <input type="hidden" name="client_id" value={clientId} />
-                          <input type="hidden" name="year" value={selectedYear} />
-                          <button
-                            type="submit"
-                            className="shrink-0 text-xs text-muted hover:text-foreground transition-colors"
-                          >
-                            {d.documents.remove}
-                          </button>
-                        </form>
-                      )}
+                      {/* Uploaded files for this document */}
+                      {(() => {
+                        const files = uploadsByDoc.get(doc.id) ?? [];
+                        if (files.length === 0)
+                          return (
+                            <p className="text-xs text-muted">{d.documents.noUploads}</p>
+                          );
+                        return (
+                          <ul className="flex flex-col gap-1">
+                            {files.map((f) => {
+                              type ValErr = { field: string; message: string };
+                              type AIRes = { formType?: string | null; formYear?: number | null; errors?: ValErr[]; warnings?: ValErr[] } | null;
+                              const result = f.ai_result as AIRes;
+                              const errors: ValErr[] = result?.errors ?? [];
+                              const warnings: ValErr[] = result?.warnings ?? [];
+                              const formLabel = result?.formType
+                                ? `${result.formType}${result.formYear ? ` · ${result.formYear}` : ""}`
+                                : null;
+
+                              return (
+                                <li key={f.id} className="flex flex-col gap-1">
+                                  {/* File header row */}
+                                  <div className={`flex items-start gap-2 rounded-md px-3 py-1.5 text-xs ${
+                                    f.ai_status === "invalid"
+                                      ? "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300"
+                                      : f.ai_status === "valid"
+                                        ? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                                        : "bg-surface-muted text-muted"
+                                  }`}>
+                                    <span className="mt-0.5 shrink-0 leading-none">
+                                      {f.ai_status === "valid" ? "✓" : f.ai_status === "invalid" ? "⚠" : "⏳"}
+                                    </span>
+                                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        {f.drive_url ? (
+                                          <a href={f.drive_url} target="_blank" rel="noopener noreferrer" className="truncate font-medium hover:underline">
+                                            {f.original_filename}
+                                          </a>
+                                        ) : (
+                                          <span className="truncate font-medium">{f.original_filename}</span>
+                                        )}
+                                        {formLabel && (
+                                          <span className="shrink-0 rounded bg-white/60 px-1.5 py-0.5 text-[10px] font-semibold dark:bg-white/10">
+                                            {formLabel}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {/* Re-check button */}
+                                    {f.ai_status === "pending" && canManageDocuments && (
+                                      <RecheckForm
+                                        action={recheckFileBound}
+                                        fileId={f.id}
+                                        clientYearId={clientYear.id}
+                                        clientId={clientId}
+                                        year={selectedYear}
+                                        labels={{
+                                          recheck: d.documents.aiRecheck,
+                                          checking: d.documents.aiChecking,
+                                          recheckTitle: d.documents.aiRecheckTitle,
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Errors */}
+                                  {errors.length > 0 && (
+                                    <ul className="flex flex-col gap-0.5 pl-7 pr-2">
+                                      {errors.map((e, i) => (
+                                        <li key={i} className="flex items-start gap-1.5 rounded bg-red-50 px-2 py-1 text-xs text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                                          <span className="shrink-0 font-bold">✗</span>
+                                          <span><span className="font-semibold">{e.field}:</span> {e.message}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+
+                                  {/* Warnings */}
+                                  {warnings.length > 0 && (
+                                    <ul className="flex flex-col gap-0.5 pl-7 pr-2">
+                                      {warnings.map((w, i) => (
+                                        <li key={i} className="flex items-start gap-1.5 rounded bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                                          <span className="shrink-0">⚠</span>
+                                          <span><span className="font-semibold">{w.field}:</span> {w.message}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+
+                                  {/* Fallback plain note */}
+                                  {!result && f.ai_status === "invalid" && f.ai_notes && (
+                                    <p className="pl-7 text-xs text-red-600 dark:text-red-400">{f.ai_notes}</p>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        );
+                      })()}
                     </li>
                   );
                 })}

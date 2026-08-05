@@ -19,9 +19,14 @@ export const getAction = (key: string): ActionDefinition | undefined =>
   actions.find((a) => a.key === key);
 
 /**
- * Returns actions that are available to a given office slug.
- * Global actions (no officeSpecific list) are always included.
- * Office-specific actions are only included when the slug matches.
+ * Returns all actions available to a given office slug (any scope).
  */
 export const getActionsForTenant = (slug: string): ActionDefinition[] =>
   actions.filter((a) => !a.officeSpecific?.length || a.officeSpecific.includes(slug));
+
+/**
+ * Returns only client-scoped actions for a given office slug.
+ * Excludes "office"-scoped actions like annual-income-summary.
+ */
+export const getClientActionsForTenant = (slug: string): ActionDefinition[] =>
+  getActionsForTenant(slug).filter((a) => (a.scope ?? "client") === "client");
