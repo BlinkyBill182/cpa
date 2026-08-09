@@ -518,7 +518,8 @@ export const revalidatePendingFileAction = async (
 
   const adminClient = createSupabaseAdminClient();
 
-  // Load the file record (verify it belongs to this tenant via client_year)
+  // Load the file record. Admin client bypasses RLS, so every subsequent check
+  // must prove this file belongs to the caller's tenant + the submitted client year.
   const { data: file } = await adminClient
     .from("uploaded_files")
     .select("id, drive_url, original_filename, client_year_document_id")
@@ -527,25 +528,30 @@ export const revalidatePendingFileAction = async (
 
   if (!file) return { status: "error", message: "הקובץ לא נמצא" };
 
-  // Verify the file's client_year belongs to this tenant
+  // uploaded_file → client_year_document must match the submitted client_year_id
+  const { data: cyd } = await adminClient
+    .from("client_year_documents")
+    .select("id, custom_name, document_type_id, client_year_id")
+    .eq("id", file.client_year_document_id)
+    .eq("client_year_id", parsed.data.client_year_id)
+    .single();
+
+  if (!cyd) return { status: "error", message: "הקובץ לא נמצא" };
+
+  // client_year must belong to this tenant and match the submitted client/year
   const { data: cy } = await adminClient
     .from("client_years")
-    .select("year, tenant_id")
-    .eq("id", parsed.data.client_year_id)
+    .select("year, tenant_id, client_id")
+    .eq("id", cyd.client_year_id)
     .eq("tenant_id", tenant.id)
+    .eq("client_id", parsed.data.client_id)
+    .eq("year", parsed.data.year)
     .single();
 
   if (!cy) return { status: "error", message: "שנת הלקוח לא נמצאה" };
 
-  // Get document name for context
-  const { data: cyd } = await adminClient
-    .from("client_year_documents")
-    .select("custom_name, document_type_id")
-    .eq("id", file.client_year_document_id)
-    .single();
-
-  let documentName = cyd?.custom_name ?? "מסמך";
-  if (cyd?.document_type_id) {
+  let documentName = cyd.custom_name ?? "מסמך";
+  if (cyd.document_type_id) {
     const { data: dt } = await adminClient
       .from("document_types")
       .select("name")
@@ -603,22 +609,9 @@ export const revalidatePendingFileAction = async (
   } catch (e) {
     const msg = e instanceof Error ? e.message : "שגיאה לא ידועה";
     console.error("[revalidatePendingFileAction] error:", msg);
-    await adminClient
-      .from("uploaded_files")
-      .update({
-        ai_status: "invalid",
-        ai_notes: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive",
-        ai_result: {
-          formType: null,
-          formYear: null,
-          isValid: false,
-          confidence: 0,
-          errors: [{ field: "Drive", message: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive" }],
-          warnings: [],
-          summary: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive",
-        },
-      })
-      .eq("id", file.id);
+    // Leave ai_status unchanged on infrastructure failure (Drive/network).
+    // Marking invalid here corrupted status on transient errors and, before the
+    // ownership join above, could be abused cross-client via a crafted file_id.
     result = { status: "error", message: `שגיאה בהורדת הקובץ מ-Drive: ${msg}` };
   }
 
