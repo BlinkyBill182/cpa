@@ -1,22 +1,20 @@
 /**
- * AI-powered document validation for Israeli CPA forms.
+ * AI-powered document validation for Israeli CPA forms (Claude vision only).
  *
- * Extraction path (in priority order):
- *   1. AWS Textract (AnalyzeDocument) — if AWS_ACCESS_KEY_ID is configured.
- *      Extracts structured key-value pairs from forms before sending to Claude.
- *   2. Claude native vision — PDFs and images sent directly; Claude reads the
- *      document visually without a pre-extraction step.
- *   3. Skipped — unsupported types (xlsx, docx, zip, csv) that cannot be read
- *      visually; these return a neutral result.
+ * Claude Sonnet reads the PDF/image directly and validates:
+ *   1. Document identity — is this the expected form for the upload slot?
+ *   2. Completeness / codes — Israeli Tax Authority / Bituach Leumi fields
+ *      from the built-in CPA system prompt.
  *
- * Validation path:
- *   Claude Sonnet (claude-sonnet-4-5) acting as an Israeli CPA expert.
- *   Returns structured JSON: { formType, isValid, errors[], warnings[] }
+ * OCR is deferred; this is a first-pass gate, not official Tax Authority certification.
+ *
+ * Returns structured JSON stored in uploaded_files.ai_result.
  */
 
 import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
+import type { Json } from "@/lib/supabase/database.types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,7 +30,8 @@ export type AIValidationResult = {
   confidence: number;
   /** Hebrew summary note — backward-compat for simple display */
   notes: string | null;
-  // ── Structured output ──────────────────────────────────────────────────────
+  /** Short Hebrew summary for UI */
+  summary: string | null;
   /** Identified form type, e.g. "טופס 106", "טופס 101" */
   formType: string | null;
   /** Tax year found in the document */
@@ -42,6 +41,23 @@ export type AIValidationResult = {
   /** Soft warnings — document may be OK but needs attention */
   warnings: ValidationError[];
 };
+
+/** Shape persisted to uploaded_files.ai_result */
+export function toAiResultJson(validation: AIValidationResult): Json {
+  return {
+    formType: validation.formType,
+    formYear: validation.formYear,
+    isValid: validation.valid,
+    confidence: validation.confidence,
+    errors: validation.errors,
+    warnings: validation.warnings,
+    summary: validation.summary,
+  };
+}
+
+export function aiStatusFromValidation(validation: AIValidationResult): "valid" | "invalid" {
+  return validation.valid ? "valid" : "invalid";
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -53,110 +69,23 @@ const SUPPORTED_VISUAL_MIMES = new Set([
   "image/gif",
 ]);
 
-/** Graceful default — used when AI is unavailable or file type is unsupported */
-function skip(reason: "no_api_key" | "unsupported_type"): AIValidationResult {
+/** Used when AI cannot run — never treat as "valid". */
+function skip(reason: "no_api_key" | "unsupported_type" | "ai_error"): AIValidationResult {
+  const messages: Record<typeof reason, string> = {
+    no_api_key: "בדיקת AI לא הוגדרה — יש להגדיר מפתח Anthropic",
+    unsupported_type: "סוג קובץ זה אינו נתמך לבדיקה אוטומטית",
+    ai_error: "בדיקת AI נכשלה — יש להריץ בדיקה חוזרת",
+  };
   return {
-    valid: true,
-    confidence: reason === "unsupported_type" ? 0.5 : 0,
-    notes: null,
+    valid: false,
+    confidence: 0,
+    notes: messages[reason],
+    summary: messages[reason],
     formType: null,
     formYear: null,
-    errors: [],
-    warnings:
-      reason === "unsupported_type"
-        ? [{ field: "סוג קובץ", message: "סוג קובץ זה אינו נתמך לבדיקה אוטומטית" }]
-        : [],
+    errors: [{ field: "AI", message: messages[reason] }],
+    warnings: [],
   };
-}
-
-// ─── Textract extraction (optional) ──────────────────────────────────────────
-
-/**
- * Attempts to extract structured text and key-value pairs from the document
- * using AWS Textract.
- *
- * Required env vars:  AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
- *
- * Returns null when AWS credentials are absent or Textract fails, in which
- * case the caller falls back to Claude native vision.
- */
-async function extractWithTextract(
-  fileBuffer: ArrayBuffer,
-  mimeType: string,
-): Promise<string | null> {
-  const keyId = process.env.AWS_ACCESS_KEY_ID;
-  const secret = process.env.AWS_SECRET_ACCESS_KEY;
-  const region = process.env.AWS_REGION ?? "us-east-1";
-
-  if (!keyId || !secret) return null;
-
-  try {
-    // Dynamic import so the AWS SDK is only loaded when credentials are present
-    const { TextractClient, AnalyzeDocumentCommand } = await import(
-      "@aws-sdk/client-textract"
-    );
-
-    const client = new TextractClient({
-      region,
-      credentials: { accessKeyId: keyId, secretAccessKey: secret },
-    });
-
-    const bytes = new Uint8Array(fileBuffer);
-
-    const response = await client.send(
-      new AnalyzeDocumentCommand({
-        Document: { Bytes: bytes },
-        // FORMS extracts key-value pairs; TABLES extracts table grids
-        FeatureTypes: ["FORMS", "TABLES"],
-      }),
-    );
-
-    const blocks = response.Blocks ?? [];
-
-    // ── Reconstruct key-value pairs from Textract FORM analysis ──────────────
-    const keyMap = new Map<string, string>(); // blockId → text
-    const lines: string[] = [];
-
-    for (const block of blocks) {
-      if (block.BlockType === "LINE" && block.Text) {
-        lines.push(block.Text);
-      }
-      if (block.BlockType === "KEY_VALUE_SET" && block.EntityTypes?.includes("KEY")) {
-        const keyText = block.Relationships?.find((r) => r.Type === "CHILD")
-          ?.Ids?.map((id) => {
-            const child = blocks.find((b) => b.Id === id);
-            return child?.Text ?? "";
-          })
-          .join(" ") ?? "";
-
-        const valueBlockId = block.Relationships?.find((r) => r.Type === "VALUE")?.Ids?.[0];
-        const valueBlock = blocks.find((b) => b.Id === valueBlockId);
-        const valueText =
-          valueBlock?.Relationships?.find((r) => r.Type === "CHILD")
-            ?.Ids?.map((id) => {
-              const child = blocks.find((b) => b.Id === id);
-              return child?.Text ?? "";
-            })
-            .join(" ") ?? "";
-
-        if (keyText.trim()) keyMap.set(keyText.trim(), valueText.trim());
-      }
-    }
-
-    const kvSection =
-      keyMap.size > 0
-        ? "\n--- שדות מזוהים ---\n" +
-          [...keyMap.entries()].map(([k, v]) => `${k}: ${v}`).join("\n")
-        : "";
-
-    const lineSection = lines.length > 0 ? "\n--- טקסט מלא ---\n" + lines.join("\n") : "";
-
-    const extracted = (kvSection + lineSection).trim();
-    return extracted.length > 0 ? extracted : null;
-  } catch (e) {
-    console.warn("[ai-validation] Textract failed, falling back to Claude vision:", e instanceof Error ? e.message : e);
-    return null;
-  }
 }
 
 // ─── System prompt ────────────────────────────────────────────────────────────
@@ -164,7 +93,7 @@ async function extractWithTextract(
 const SYSTEM_PROMPT = `You are an expert Israeli CPA (רואה חשבון) specializing in validating Israeli tax and social-security documents.
 
 ## Your task
-Validate the document the user provides.  Respond with ONLY a JSON object — no markdown, no prose.
+Validate the document the user provides. Respond with ONLY a JSON object — no markdown, no prose.
 
 ## Output schema
 {
@@ -172,6 +101,7 @@ Validate the document the user provides.  Respond with ONLY a JSON object — no
   "formYear": number | null,     // tax/calendar year found in the document, null if absent
   "isValid": boolean,
   "confidence": number,          // 0.0 – 1.0
+  "summary": "string (Hebrew)",  // 1 short sentence summarizing the result
   "errors": [                    // hard problems — document should be rejected
     { "field": "string", "message": "string (Hebrew)" }
   ],
@@ -184,13 +114,15 @@ Validate the document the user provides.  Respond with ONLY a JSON object — no
 
 ### טופס 106 — אישור שנתי מהמעסיק
 - Issuer: employer; given to employee + tax authority
+- Visual identity: title like "אישור על-פי תקנות מס הכנסה (ניכוי ממשכורת)" or "טופס 106"
 - Required fields: מספר מעסיק (9 digits), תעודת זהות עובד (9 digits), שנת מס, שם עובד,
   שכר ברוטו (code 158/172), מס הכנסה שנוכה (code 042), ביטוח לאומי חלק עובד (code 045),
   מס בריאות (code 047)
-- Calculations to verify:
-  - ניכוי מס should be consistent with gross income and the applicable tax bracket
-  - BI employee share ≈ gross × applicable NI rate (varies by income band)
-  - Health tax ≈ gross × 3.1% (5% above threshold)
+- Also look for: חודשי עבודה, נקודות זיכוי, הפרשות פנסיה/גמל/השתלמות when present
+- Calculations to sanity-check when readable:
+  - ניכוי מס roughly consistent with gross income
+  - BI employee share roughly consistent with NI rates
+  - Health tax roughly consistent with published rates
 
 ### טופס 101 — הצהרת עובד
 - Signed by employee at start of employment or when status changes
@@ -205,43 +137,37 @@ Validate the document the user provides.  Respond with ONLY a JSON object — no
 - Required: employer number, periods, wage totals, BI contributions
 
 ### הסכם שכר / תלוש שכר (Payslip)
-- Not an official tax form but validate employer number, gross/net, deductions
+- Not an official annual tax form — INVALID if the expected document is טופס 106
 
 ## Validation rules
-1. **Israeli ID (ת.ז.)** — 9 digits; must pass the Luhn-style check:
-   multiply digits at positions 1,3,5,7,9 by 1 and positions 2,4,6,8 by 2;
-   if product > 9 subtract 9; sum all; valid iff sum % 10 == 0.
-2. **Employer number (מספר מעסיק)** — 9 digits, starts with a valid issuing-authority prefix.
-3. **Dates** — must be in Israeli format DD/MM/YYYY or YYYY; future dates are errors.
-4. **Year match** — the document year must match the expected year supplied in the prompt.
-5. **Amounts** — must be positive numbers; unrealistically large values (>10M ₪) are warnings.
-6. **Blank required fields** — error if a required field is empty or "0" when it should not be.
+1. **Identity first** — decide what the document actually is before checking fields.
+2. **Israeli ID (ת.ז.)** — 9 digits; Luhn-style check when readable.
+3. **Employer number (מספר מעסיק)** — 9 digits when required for the form.
+4. **Dates** — Israeli format DD/MM/YYYY or YYYY; future dates are errors.
+5. **Year match** — document year must match the expected year when a year is visible.
+6. **Amounts** — positive numbers; unrealistically large values (>10M ₪) are warnings.
+7. **Blank required fields** — error if a required field is empty when it should not be.
+8. **Wrong document class** — insurance policy, bank statement, contract, payslip, or any
+   non-matching form for the expected slot → isValid=false with a clear Hebrew error.
 
 ## Tone
-All error.message and warning.message values must be in Hebrew.
+All summary / error.message / warning.message values must be in Hebrew.
 Be concise — max 15 words per message.
-If the document is completely illegible or clearly not a tax/payroll document, set isValid=false and add an error: { "field": "מסמך", "message": "המסמך אינו טופס מס ישראלי מוכר" }.`;
+If the document is completely illegible, set isValid=false and add:
+{ "field": "מסמך", "message": "המסמך אינו קריא או אינו טופס מס ישראלי מוכר" }.`;
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 /**
- * Validates an uploaded document.
+ * Validates an uploaded document with Claude vision.
  *
- * Steps:
- *  1. (optional) Textract text extraction
- *  2. Claude Sonnet validation with Israeli CPA system prompt
- *     + optional per-document-type validation_prompt
- *  3. Returns AIValidationResult
- *
- * Never throws — a failed validation returns valid=true with confidence=0.
+ * Never throws — a failed validation returns valid=false with an explanatory error.
  */
 export async function validateUploadedDocument(params: {
   fileBuffer: ArrayBuffer;
   mimeType: string;
   documentName: string;
   year: number;
-  /** Optional CPA-written prompt from document_types.validation_prompt */
-  validationPrompt?: string | null;
 }): Promise<AIValidationResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -249,72 +175,57 @@ export async function validateUploadedDocument(params: {
     return skip("no_api_key");
   }
 
-  const { fileBuffer, mimeType, documentName, year, validationPrompt } = params;
+  const { fileBuffer, mimeType, documentName, year } = params;
 
   if (!SUPPORTED_VISUAL_MIMES.has(mimeType)) {
     return skip("unsupported_type");
   }
 
-  // Build the effective system prompt — inject the custom prompt if provided
-  const effectiveSystemPrompt = validationPrompt?.trim()
-    ? `${SYSTEM_PROMPT}
+  const typeCheckRules = `
+## Expected document type (CRITICAL)
+The client was asked to upload: "${documentName}" for tax year ${year}.
 
----
-## הוראות ספציפיות לסוג מסמך זה (מוגדרות על ידי רואה החשבון):
-${validationPrompt.trim()}
----`
-    : SYSTEM_PROMPT;
+Rules:
+1. First identify what the document actually is (formType).
+2. If it is NOT "${documentName}" (or a clear equivalent of that form), you MUST set isValid=false and add an error:
+   { "field": "סוג מסמך", "message": "המסמך שהועלה אינו ${documentName}" }
+3. Insurance policies, bank statements, payslips, contracts, or any other document that is not the expected form are INVALID for this upload slot.
+4. Do NOT mark isValid=true just because the file is readable or contains Hebrew text / ID numbers.
+5. Only mark isValid=true when you are confident this IS the expected form AND required checks pass.
+6. If the year is visible and differs from ${year}, add an error on field "שנת מס".
+`;
+
+  const effectiveSystemPrompt = `${SYSTEM_PROMPT}
+
+${typeCheckRules}`;
 
   try {
     const anthropic = new Anthropic({ apiKey });
 
-    // ── Step 1: Try Textract extraction ──────────────────────────────────────
-    const extractedText = await extractWithTextract(fileBuffer, mimeType);
+    const base64 = Buffer.from(fileBuffer).toString("base64");
+    const isPdf = mimeType === "application/pdf";
+    const docSource = isPdf
+      ? ({ type: "base64", media_type: "application/pdf", data: base64 } as const)
+      : ({
+          type: "base64",
+          media_type: mimeType as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+          data: base64,
+        } as const);
 
-    let userContent: Anthropic.MessageParam["content"];
+    const docBlock = isPdf
+      ? ({ type: "document", source: docSource } as const)
+      : ({ type: "image", source: docSource } as const);
 
-    if (extractedText) {
-      // Textract succeeded — send extracted text to Claude as text-only
-      userContent = [
-        {
-          type: "text",
-          text: `המסמך שהלקוח אמור להגיש: "${documentName}"
-שנת מס צפויה: ${year}
-
-הטקסט שחולץ מהמסמך על ידי OCR:
-${extractedText}
-
-אנא בצע את הבדיקה המלאה וחזור עם JSON בלבד.`,
-        },
-      ];
-    } else {
-      // No Textract — send the raw document to Claude for native vision
-      const base64 = Buffer.from(fileBuffer).toString("base64");
-
-      const isPdf = mimeType === "application/pdf";
-      const docSource = isPdf
-        ? ({ type: "base64", media_type: "application/pdf", data: base64 } as const)
-        : ({
-            type: "base64",
-            media_type: mimeType as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
-            data: base64,
-          } as const);
-
-      const docBlock = isPdf
-        ? ({ type: "document", source: docSource } as const)
-        : ({ type: "image", source: docSource } as const);
-
-      userContent = [
-        docBlock,
-        {
-          type: "text",
-          text: `המסמך שהלקוח אמור להגיש: "${documentName}"
+    const userContent: Anthropic.MessageParam["content"] = [
+      docBlock,
+      {
+        type: "text",
+        text: `המסמך שהלקוח אמור להגיש: "${documentName}"
 שנת מס צפויה: ${year}
 
 אנא בצע את הבדיקה המלאה וחזור עם JSON בלבד.`,
-        },
-      ];
-    }
+      },
+    ];
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-5",
@@ -333,6 +244,7 @@ ${extractedText}
       formYear?: number | null;
       isValid?: boolean;
       confidence?: number;
+      summary?: string | null;
       errors?: ValidationError[];
       warnings?: ValidationError[];
     };
@@ -341,16 +253,33 @@ ${extractedText}
 
     const errors: ValidationError[] = Array.isArray(parsed.errors) ? parsed.errors : [];
     const warnings: ValidationError[] = Array.isArray(parsed.warnings) ? parsed.warnings : [];
-    const isValid = parsed.isValid ?? errors.length === 0;
+    let isValid = parsed.isValid ?? errors.length === 0;
     const confidence = typeof parsed.confidence === "number" ? parsed.confidence : 0.8;
 
-    // Backward-compat notes field: first error message, or null
-    const notes = !isValid && errors.length > 0 ? errors.map((e) => `${e.field}: ${e.message}`).join(" · ") : null;
+    // Server-side safety: never accept empty formType as valid when a specific type was expected
+    if (isValid && !parsed.formType && documentName.trim()) {
+      isValid = false;
+      errors.push({
+        field: "סוג מסמך",
+        message: `לא ניתן לזהות את המסמך כ${documentName}`,
+      });
+    }
+
+    const summary =
+      (typeof parsed.summary === "string" && parsed.summary.trim()) ||
+      (!isValid && errors.length > 0
+        ? errors.map((e) => `${e.field}: ${e.message}`).join(" · ")
+        : isValid
+          ? "המסמך תקין"
+          : null);
+
+    const notes = !isValid && errors.length > 0 ? errors.map((e) => `${e.field}: ${e.message}`).join(" · ") : summary;
 
     return {
       valid: isValid,
       confidence,
       notes,
+      summary,
       formType: parsed.formType ?? null,
       formYear: parsed.formYear ?? null,
       errors,
@@ -358,6 +287,6 @@ ${extractedText}
     };
   } catch (e) {
     console.error("[ai-validation] Claude error:", e instanceof Error ? e.message : e);
-    return { valid: true, confidence: 0, notes: null, formType: null, formYear: null, errors: [], warnings: [] };
+    return skip("ai_error");
   }
 }

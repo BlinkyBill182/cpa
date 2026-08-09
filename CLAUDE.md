@@ -31,7 +31,17 @@ Full project context: @CONTEXT.md
 /upload/[token]                                                      → Client upload portal — isolated (client-portal) route group, NO auth/lang
                                                                         token = HS256 JWT (90-day) with clientYearId as `sub`; invalid/expired → Hebrew error screen
                                                                         sign: signUploadToken(id) · verify: verifyUploadToken(token) in src/lib/upload-token.ts
+POST /api/upload                                                     → Drive upload; returns ai_status=pending; Claude validates in after()
+GET  /api/upload/[fileId]/status?token=…                             → Poll AI result for upload portal JWT
+POST /api/admin/revalidate-pending                                   → Platform owner: re-run Claude on pending files
 ```
+
+### AI document validation (Claude-only)
+
+- `src/lib/ai-validation.ts` — Claude Sonnet vision; no OCR layer yet
+- Requires `ANTHROPIC_API_KEY` (invalid/missing key → `ai_status: invalid`, fail-closed)
+- Rules come from the built-in Israeli CPA system prompt in `ai-validation.ts` (form identity + tax/BI field checks)
+- Results: `uploaded_files.ai_status` / `ai_notes` / `ai_result` (JSONB with errors/warnings/summary)
 
 Static routes always win over `[slug]`. Reserved slugs (`backoffice`, `login`, `auth`, `api`, `admin`, `en`, `he`) are blocked at tenant creation time.
 

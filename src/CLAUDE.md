@@ -15,7 +15,10 @@
 | `/[lang]/[slug]/backoffice/document-types` | Office document library | Admin-only; manage standard document types |
 | `/[lang]/[slug]/clients/[clientId]/actions/annual-income-summary` | Annual doc collection | Static route overrides `[actionKey]`; full 7-step workflow |
 | `/[lang]/[slug]` | Public client portal | No auth required |
-| `/upload/[token]` | Client upload portal | Public, JWT-gated (Phase 2); token tied to client_year_id, 90-day expiry |
+| `/upload/[token]` | Client upload portal | Public, JWT-gated; token tied to client_year_id, 90-day expiry |
+| `POST /api/upload` | Client file upload | Drive first; AI runs async via `after()`; returns `pending` |
+| `GET /api/upload/[fileId]/status` | AI status poll | JWT-gated; used by UploadButton while pending |
+| `POST /api/admin/revalidate-pending` | Batch AI recheck | Platform owner only |
 
 ## Route protection
 

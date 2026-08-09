@@ -1,6 +1,11 @@
+import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
-import { validateUploadedDocument } from "@/lib/ai-validation";
+import {
+  aiStatusFromValidation,
+  toAiResultJson,
+  validateUploadedDocument,
+} from "@/lib/ai-validation";
 import { uploadToDrive } from "@/lib/google-drive";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyUploadToken } from "@/lib/upload-token";
@@ -130,19 +135,18 @@ export async function POST(request: NextRequest) {
 
   // ── Get document display name for folder ────────────────────────────────────
   let documentName = doc.custom_name ?? "מסמך";
-  let validationPrompt: string | null = null;
   if (doc.document_type_id) {
     const { data: dt } = await supabase
       .from("document_types")
-      .select("name, validation_prompt")
+      .select("name")
       .eq("id", doc.document_type_id)
       .single();
     if (dt?.name && !doc.custom_name) documentName = dt.name;
-    validationPrompt = dt?.validation_prompt ?? null;
   }
 
   // ── Upload to Google Drive ───────────────────────────────────────────────────
   const fileBuffer = await file.arrayBuffer();
+  const mimeType = file.type;
 
   let driveResult: { fileId: string; webViewLink: string };
   try {
@@ -154,14 +158,14 @@ export async function POST(request: NextRequest) {
       documentName,
       fileName: file.name,
       fileBuffer,
-      mimeType: file.type,
+      mimeType,
     });
   } catch (e) {
     console.error("[api/upload] Drive upload error:", e instanceof Error ? e.message : e);
     return err("שגיאה בהעלאה לדרייב. נסה שוב.", 500);
   }
 
-  // ── Record metadata in DB ────────────────────────────────────────────────────
+  // ── Record metadata in DB (AI still pending) ─────────────────────────────────
   const { data: record, error: dbError } = await supabase
     .from("uploaded_files")
     .insert({
@@ -180,32 +184,55 @@ export async function POST(request: NextRequest) {
     return err("הקובץ הועלה אך לא נשמר. פנה לתמיכה.", 500);
   }
 
-  // ── AI validation (best-effort — never blocks or fails the upload) ──────────
-  const validation = await validateUploadedDocument({
-    fileBuffer,
-    mimeType: file.type,
-    documentName,
-    year: clientYear.year,
-    validationPrompt,
+  const uploadedFileId = record!.id;
+  const year = clientYear.year;
+  // Copy buffer for background work (request lifecycle ends after response)
+  const bufferCopy = fileBuffer.slice(0);
+
+  // ── Background Claude validation (does not block the client) ─────────────────
+  after(async () => {
+    try {
+      const validation = await validateUploadedDocument({
+        fileBuffer: bufferCopy,
+        mimeType,
+        documentName,
+        year,
+      });
+
+      const admin = createSupabaseAdminClient();
+      const { error: updateError } = await admin
+        .from("uploaded_files")
+        .update({
+          ai_status: aiStatusFromValidation(validation),
+          ai_notes: validation.notes,
+          ai_result: toAiResultJson(validation),
+        })
+        .eq("id", uploadedFileId);
+
+      if (updateError) {
+        console.error("[api/upload] AI update error:", updateError.message);
+      }
+    } catch (e) {
+      console.error("[api/upload] Background AI validation failed:", e instanceof Error ? e.message : e);
+      const admin = createSupabaseAdminClient();
+      await admin
+        .from("uploaded_files")
+        .update({
+          ai_status: "invalid",
+          ai_notes: "בדיקת AI נכשלה — יש להריץ בדיקה חוזרת",
+          ai_result: {
+            formType: null,
+            formYear: null,
+            isValid: false,
+            confidence: 0,
+            errors: [{ field: "AI", message: "בדיקת AI נכשלה — יש להריץ בדיקה חוזרת" }],
+            warnings: [],
+            summary: "בדיקת AI נכשלה — יש להריץ בדיקה חוזרת",
+          },
+        })
+        .eq("id", uploadedFileId);
+    }
   });
 
-  const { data: finalRecord } = await supabase
-    .from("uploaded_files")
-    .update({
-      ai_status: validation.valid ? "valid" : "invalid",
-      ai_notes: validation.notes,
-      ai_result: {
-        formType: validation.formType,
-        formYear: validation.formYear,
-        isValid: validation.valid,
-        confidence: validation.confidence,
-        errors: validation.errors,
-        warnings: validation.warnings,
-      },
-    })
-    .eq("id", record!.id)
-    .select("id, original_filename, file_size_kb, uploaded_at, upload_status, ai_status, ai_notes, ai_result")
-    .single();
-
-  return NextResponse.json({ file: finalRecord ?? record }, { status: 201 });
+  return NextResponse.json({ file: record }, { status: 201 });
 }

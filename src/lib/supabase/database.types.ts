@@ -198,7 +198,6 @@ export type Database = {
           name: string;
           allowed_formats: string[];
           is_active: boolean;
-          validation_prompt: string | null;
           created_at: string;
         };
         Insert: {
@@ -207,7 +206,6 @@ export type Database = {
           name: string;
           allowed_formats?: string[];
           is_active?: boolean;
-          validation_prompt?: string | null;
           created_at?: string;
         };
         Update: {
@@ -216,7 +214,6 @@ export type Database = {
           name?: string;
           allowed_formats?: string[];
           is_active?: boolean;
-          validation_prompt?: string | null;
           created_at?: string;
         };
       };

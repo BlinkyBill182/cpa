@@ -274,6 +274,9 @@ Tenant-scoped (stored in `tenant_memberships.role`):
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only, bypasses RLS) |
 | `NEXT_PUBLIC_SITE_URL` | Full public URL of the app (e.g. `https://cpa.yourdomain.com`) |
+| `UPLOAD_JWT_SECRET` | HS256 secret for client upload portal JWTs |
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | Google Drive OAuth for tenant file storage |
+| `ANTHROPIC_API_KEY` | Claude Sonnet document validation (required for AI checks; fail-closed if missing/invalid) |
 
 ### Test (`.env.test`) — gitignored, see `.env.test.example`
 
@@ -386,11 +389,23 @@ Cursor’s **global** `~/.cursor/hooks.json` may still remind the agent after `g
 
 ---
 
-## 13. What Is Not Yet Built
+## 13. AI document validation (Claude-only)
 
-- Actual execution logic for individual actions (all action execution pages are stubs)
+After a client uploads a file to Google Drive (`POST /api/upload`):
+
+1. Row is inserted with `ai_status: pending` and the HTTP response returns immediately.
+2. Next.js `after()` runs `validateUploadedDocument` (Claude Sonnet vision) with the expected document name and tax year, using the built-in Israeli CPA system prompt.
+3. Updates `ai_status` (`valid` / `invalid`), `ai_notes`, and structured `ai_result` (formType, formYear, errors, warnings, summary).
+4. Upload portal polls `GET /api/upload/[fileId]/status` until the result is ready.
+
+Wrong document types (e.g. insurance policy uploaded as Form 106) must be rejected. This is a first-pass gate — not official Tax Authority certification. Dedicated OCR (e.g. Google Document AI) is deferred. There is no per-document-type custom prompt UI.
+
+## 14. What Is Not Yet Built
+
+- Dedicated OCR pre-extraction layer for Hebrew forms
+- Deterministic Israeli tax-code rule engine / official רשות המיסים API
+- Actual execution logic for remaining stub actions
 - Seasonal income management feature (data entry, Google Sheets import)
-- Client file upload page
 - Email notifications (transactional)
 - WhatsApp notifications
 - CRON jobs / scheduled tasks

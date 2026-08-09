@@ -32,12 +32,10 @@ export const createDocumentTypeAction = async (
     .object({
       name: nameSchema,
       allowed_formats: z.array(z.string()).default([]),
-      validation_prompt: z.string().trim().max(4000).optional().nullable(),
     })
     .safeParse({
       name: formData.get("name"),
       allowed_formats: parseFormats(formData.get("allowed_formats")),
-      validation_prompt: formData.get("validation_prompt") || null,
     });
 
   if (!parsed.success) {
@@ -50,7 +48,6 @@ export const createDocumentTypeAction = async (
     tenant_id: tenant.id,
     name: parsed.data.name,
     allowed_formats: parsed.data.allowed_formats,
-    validation_prompt: parsed.data.validation_prompt ?? null,
   });
 
   if (error) {
@@ -82,13 +79,11 @@ export const updateDocumentTypeAction = async (
       id: uuidSchema,
       name: nameSchema,
       allowed_formats: z.array(z.string()).default([]),
-      validation_prompt: z.string().trim().max(4000).optional().nullable(),
     })
     .safeParse({
       id: formData.get("id"),
       name: formData.get("name"),
       allowed_formats: parseFormats(formData.get("allowed_formats")),
-      validation_prompt: formData.get("validation_prompt") || null,
     });
 
   if (!parsed.success) {
@@ -102,7 +97,6 @@ export const updateDocumentTypeAction = async (
     .update({
       name: parsed.data.name,
       allowed_formats: parsed.data.allowed_formats,
-      validation_prompt: parsed.data.validation_prompt ?? null,
     })
     .eq("id", parsed.data.id)
     .eq("tenant_id", tenant.id);
@@ -165,12 +159,11 @@ export const adoptGlobalDocumentTypeAction = async (
     redirect(`/${slug}/backoffice/document-types?error=already_exists`);
   }
 
-  // Create the tenant's copy (no validation_prompt — tenant can add their own later)
+  // Create the tenant's copy
   const { error: insertError } = await supabase.from("document_types").insert({
     tenant_id: tenant.id,
     name: globalType.name,
     allowed_formats: globalType.allowed_formats,
-    validation_prompt: null,
   });
 
   if (insertError) {
@@ -186,6 +179,72 @@ export const adoptGlobalDocumentTypeAction = async (
 
   revalidatePath(`/${slug}/backoffice/document-types`);
   redirect(`/${slug}/backoffice/document-types?adopted=1`);
+};
+
+// ─── Delete document type ──────────────────────────────────────────────────
+
+export const deleteDocumentTypeAction = async (
+  locale: string,
+  slug: string,
+  formData: FormData,
+) => {
+  const { user, tenant } = await requireTenantAdminBySlug(locale, slug);
+
+  const parsed = z
+    .object({ id: uuidSchema })
+    .safeParse({ id: formData.get("id") });
+
+  if (!parsed.success) {
+    redirect(`/${slug}/backoffice/document-types?error=save`);
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  // Confirm the type belongs to this tenant and read its name
+  const { data: docType, error: fetchError } = await supabase
+    .from("document_types")
+    .select("id, name")
+    .eq("id", parsed.data.id)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (fetchError || !docType) {
+    redirect(`/${slug}/backoffice/document-types?error=save`);
+  }
+
+  // client_year_documents has CHECK (document_type_id IS NOT NULL OR custom_name IS NOT NULL)
+  // and ON DELETE SET NULL on document_type_id — so copy the name first where needed.
+  const { error: preserveError } = await supabase
+    .from("client_year_documents")
+    .update({ custom_name: docType.name })
+    .eq("document_type_id", docType.id)
+    .is("custom_name", null);
+
+  if (preserveError) {
+    console.error("[deleteDocumentType] preserve name failed:", preserveError);
+    redirect(`/${slug}/backoffice/document-types?error=save`);
+  }
+
+  const { error } = await supabase
+    .from("document_types")
+    .delete()
+    .eq("id", docType.id)
+    .eq("tenant_id", tenant.id);
+
+  if (error) {
+    console.error("[deleteDocumentType] delete failed:", error);
+    redirect(`/${slug}/backoffice/document-types?error=save`);
+  }
+
+  await logAuditEvent({
+    action: "document_type.deleted",
+    actorUserId: user.id,
+    tenantId: tenant.id,
+    payload: { id: docType.id, name: docType.name },
+  });
+
+  revalidatePath(`/${slug}/backoffice/document-types`);
+  redirect(`/${slug}/backoffice/document-types?deleted=1`);
 };
 
 // ─── Toggle active ─────────────────────────────────────────────────────────

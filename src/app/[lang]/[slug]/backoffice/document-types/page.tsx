@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   adoptGlobalDocumentTypeAction,
   createDocumentTypeAction,
+  deleteDocumentTypeAction,
   toggleDocumentTypeActiveAction,
   updateDocumentTypeAction,
 } from "./actions";
@@ -16,12 +17,13 @@ type Props = {
     created?: string;
     updated?: string;
     adopted?: string;
+    deleted?: string;
   }>;
 };
 
 export default async function DocumentTypesPage({ params, searchParams }: Props) {
   const { lang, slug } = await params;
-  const { error, created, updated, adopted } = await searchParams;
+  const { error, created, updated, adopted, deleted } = await searchParams;
 
   const dict = await getDictionary(lang);
   const { tenant } = await requireTenantAdminBySlug(lang, slug);
@@ -32,7 +34,7 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
   // Fetch tenant-specific types
   const { data: documentTypes } = await supabase
     .from("document_types")
-    .select("id, name, allowed_formats, is_active, validation_prompt")
+    .select("id, name, allowed_formats, is_active")
     .eq("tenant_id", tenant.id)
     .order("name");
 
@@ -52,6 +54,7 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
   const createBound = createDocumentTypeAction.bind(null, lang, slug);
   const updateBound = updateDocumentTypeAction.bind(null, lang, slug);
   const toggleBound = toggleDocumentTypeActiveAction.bind(null, lang, slug);
+  const deleteBound = deleteDocumentTypeAction.bind(null, lang, slug);
   const adoptBound = adoptGlobalDocumentTypeAction.bind(null, lang, slug);
 
   return (
@@ -90,6 +93,11 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
           {d.successAdopted}
         </p>
       )}
+      {deleted && (
+        <p className="rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300">
+          {d.successDeleted}
+        </p>
+      )}
 
       {/* Add new document type */}
       <div className="surface-card p-6 flex flex-col gap-4">
@@ -113,17 +121,6 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
               name="allowed_formats"
               className="input-field"
               placeholder="PDF, JPEG, XLS"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-foreground">{d.validationPromptLabel}</label>
-            <p className="text-xs text-muted">{d.validationPromptHint}</p>
-            <textarea
-              name="validation_prompt"
-              rows={5}
-              maxLength={4000}
-              className="input-field resize-y text-sm"
-              placeholder={d.validationPromptPlaceholder}
             />
           </div>
           <button type="submit" className="btn-primary self-start">
@@ -156,17 +153,27 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
                     )}
                   </div>
 
-                  {/* Toggle active */}
-                  <form action={toggleBound} className="shrink-0">
-                    <input type="hidden" name="id" value={dt.id} />
-                    <input type="hidden" name="is_active" value={String(!dt.is_active)} />
-                    <button
-                      type="submit"
-                      className="text-xs text-muted hover:text-foreground transition-colors"
-                    >
-                      {dt.is_active ? d.deactivate : d.activate}
-                    </button>
-                  </form>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <form action={toggleBound}>
+                      <input type="hidden" name="id" value={dt.id} />
+                      <input type="hidden" name="is_active" value={String(!dt.is_active)} />
+                      <button
+                        type="submit"
+                        className="text-xs text-muted hover:text-foreground transition-colors"
+                      >
+                        {dt.is_active ? d.deactivate : d.activate}
+                      </button>
+                    </form>
+                    <form action={deleteBound}>
+                      <input type="hidden" name="id" value={dt.id} />
+                      <button
+                        type="submit"
+                        className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                      >
+                        {d.delete}
+                      </button>
+                    </form>
+                  </div>
                 </div>
 
                 {/* Inline edit form */}
@@ -191,18 +198,6 @@ export default async function DocumentTypesPage({ params, searchParams }: Props)
                       className="input-field text-sm"
                       placeholder="PDF, JPEG, XLS"
                     />
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-foreground">{d.validationPromptLabel}</label>
-                      <p className="text-xs text-muted">{d.validationPromptHint}</p>
-                      <textarea
-                        name="validation_prompt"
-                        rows={6}
-                        maxLength={4000}
-                        defaultValue={dt.validation_prompt ?? ""}
-                        className="input-field resize-y text-sm"
-                        placeholder={d.validationPromptPlaceholder}
-                      />
-                    </div>
                     <button type="submit" className="btn-primary text-sm self-start">
                       {d.save}
                     </button>

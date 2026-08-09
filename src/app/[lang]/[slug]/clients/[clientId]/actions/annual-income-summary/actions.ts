@@ -507,9 +507,12 @@ export const revalidatePendingFileAction = async (
   });
   if (!parsed.success) return { status: "error", message: "נתונים שגויים" };
 
-  // Call the admin revalidate endpoint internally — re-use the same logic
-  // by importing helpers directly (avoids HTTP round-trip in server action)
-  const { validateUploadedDocument } = await import("@/lib/ai-validation");
+  // Re-use the shared validator (avoids HTTP round-trip in server action)
+  const {
+    aiStatusFromValidation,
+    toAiResultJson,
+    validateUploadedDocument,
+  } = await import("@/lib/ai-validation");
   const { downloadFromDrive, extractDriveFileId } = await import("@/lib/google-drive");
   const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
 
@@ -542,15 +545,13 @@ export const revalidatePendingFileAction = async (
     .single();
 
   let documentName = cyd?.custom_name ?? "מסמך";
-  let validationPrompt: string | null = null;
   if (cyd?.document_type_id) {
     const { data: dt } = await adminClient
       .from("document_types")
-      .select("name, validation_prompt")
+      .select("name")
       .eq("id", cyd.document_type_id)
       .single();
     if (dt?.name && !cyd.custom_name) documentName = dt.name;
-    validationPrompt = dt?.validation_prompt ?? null;
   }
 
   // Get OAuth token
@@ -583,24 +584,40 @@ export const revalidatePendingFileAction = async (
       mimeType,
       documentName,
       year: cy.year,
-      validationPrompt,
     });
 
     await adminClient
       .from("uploaded_files")
       .update({
-        ai_status: validation.valid ? "valid" : "invalid",
+        ai_status: aiStatusFromValidation(validation),
         ai_notes: validation.notes,
+        ai_result: toAiResultJson(validation),
       })
       .eq("id", file.id);
 
-    result = { status: "ok", aiStatus: validation.valid ? "valid" : "invalid", notes: validation.notes };
+    result = {
+      status: "ok",
+      aiStatus: aiStatusFromValidation(validation),
+      notes: validation.notes,
+    };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "שגיאה לא ידועה";
     console.error("[revalidatePendingFileAction] error:", msg);
     await adminClient
       .from("uploaded_files")
-      .update({ ai_status: "invalid", ai_notes: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive" })
+      .update({
+        ai_status: "invalid",
+        ai_notes: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive",
+        ai_result: {
+          formType: null,
+          formYear: null,
+          isValid: false,
+          confidence: 0,
+          errors: [{ field: "Drive", message: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive" }],
+          warnings: [],
+          summary: "לא ניתן לאמת — שגיאה בהורדת הקובץ מ-Drive",
+        },
+      })
       .eq("id", file.id);
     result = { status: "error", message: `שגיאה בהורדת הקובץ מ-Drive: ${msg}` };
   }

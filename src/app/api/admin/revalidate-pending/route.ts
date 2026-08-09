@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { validateUploadedDocument } from "@/lib/ai-validation";
+import {
+  aiStatusFromValidation,
+  toAiResultJson,
+  validateUploadedDocument,
+} from "@/lib/ai-validation";
 import { downloadFromDrive, extractDriveFileId } from "@/lib/google-drive";
 import { requirePlatformOwner } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -28,7 +32,7 @@ function inferMimeType(filename: string): string {
  * POST /api/admin/revalidate-pending
  *
  * Re-downloads every uploaded_file with ai_status = 'pending' from Google Drive
- * and runs it through Claude validation, updating ai_status / ai_notes.
+ * and runs it through Claude validation, updating ai_status / ai_notes / ai_result.
  *
  * Optional query params:
  *   ?tenantId=<uuid>   — limit to a single tenant
@@ -152,23 +156,29 @@ export async function POST(request: NextRequest) {
 
       // Resolve document name
       let documentName = cyd?.custom_name ?? "מסמך";
-      if (!cyd?.custom_name && cyd?.document_type_id) {
+      if (cyd?.document_type_id) {
         const { data: dt } = await supabase
           .from("document_types")
           .select("name")
           .eq("id", cyd.document_type_id)
           .single();
-        documentName = dt?.name ?? documentName;
+        if (dt?.name && !cyd.custom_name) documentName = dt.name;
       }
 
       // Run AI validation
-      const validation = await validateUploadedDocument({ fileBuffer, mimeType, documentName, year });
+      const validation = await validateUploadedDocument({
+        fileBuffer,
+        mimeType,
+        documentName,
+        year,
+      });
 
       await supabase
         .from("uploaded_files")
         .update({
-          ai_status: validation.valid ? "valid" : "invalid",
+          ai_status: aiStatusFromValidation(validation),
           ai_notes: validation.notes,
+          ai_result: toAiResultJson(validation),
         })
         .eq("id", file.id);
 
